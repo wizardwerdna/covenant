@@ -4,15 +4,14 @@ nextTick = (process?.nextTick) or
            (typeof setImmediate == 'function' && setImmediate) or
            (task) -> setTimeout(task, 0)
 
-class Promise
-  constructor: (@promise=new PendingPromise)->
-  fulfill: (value) -> @promise = @promise.fulfill value
-  reject: (reason) -> @promise = @promise.reject reason
-  then: (onFulfilled, onRejected) -> @promise.then onFulfilled, onRejected
+root.Promise = class Promise
+  constructor: (@state=new PendingPromiseState)->
+  fulfill: (value) -> @state = @state.fulfill value
+  reject: (reason) -> @state = @state.reject reason
+  then: (onFulfilled, onRejected) -> @state.then onFulfilled, onRejected
+root.make = -> new Promise
 
-root.Promise = Promise
-
-class Thenable
+class ThenableStrategy
   then: (onFulfilled, onRejected) ->
     promise2 = new Promise
     @_schedule_for_processing
@@ -21,48 +20,56 @@ class Thenable
       nextPromise: promise2
     promise2
 
-class PendingPromise extends Thenable
+class PendingPromiseState extends ThenableStrategy
   constructor: -> @pendings = []
-  fulfill: (value)-> new FulfilledPromise value, @pendings
-  reject: (reason)-> new RejectedPromise reason, @pendings
+  fulfill: (value)-> new FulfilledPromiseState value, @pendings
+  reject: (reason)-> new RejectedPromiseState reason, @pendings
   _schedule_for_processing: (params) -> @pendings.push params
 
-class CompletedPromise extends Thenable
-  constructor: (pendings)->
-    for pending in pendings
-      do(pending) =>
-        @_schedule_for_processing(pending)
-  fulfill: (value) -> @
-  reject: (value) -> @
-  _isPromise: (p) -> typeof p?.then == 'function'
+class ResolvedPromiseState extends ThenableStrategy
+  constructor: (pendings=[])-> @_schedulePendingCallbacks(pendings)
+  fulfill: (value) ->
+  reject: (value) ->
   _process: (pending) ->
     try
-      if typeof pending.callback == 'function'
-        result = pending.callback(pending.data)
-        if @_isPromise(result)
-          result.then pending.nextPromise.fulfill.bind(pending.nextPromise),
-                      pending.nextPromise.reject.bind(pending.nextPromise)
-        else
-          pending.nextPromise.fulfill(result)
-      else
-        pending.fallback.bind(pending.nextPromise) pending.data
+      @_processNonFunctionOrCallback pending
     catch e
       pending.nextPromise.reject(e)
+  _processNonFunctionOrCallback: (pending) ->
+    if @_isFunction pending.callback
+      @_processCallbackResult(pending)
+    else
+      pending.onValue pending.valueOrReason
+  _processCallbackResult: (pending) ->
+    promiseOrValue = pending.callback pending.valueOrReason
+    if @_isPromise(promiseOrValue)
+      promiseOrValue.then pending.fulfillNext, pending.rejectNext
+    else
+      pending.fulfillNext promiseOrValue
+  _schedulePendingCallbacks: (pendings)->
+    for pending in pendings
+      do(pending) => @_schedule_for_processing pending
+  _isPromise: (p) -> @_isFunction(p?.then)
+  _isFunction: (f) -> typeof f == 'function'
 
-class FulfilledPromise extends CompletedPromise
+class FulfilledPromiseState extends ResolvedPromiseState
   constructor: (@value, pendings=[]) -> super(pendings)
   _schedule_for_processing: (pending) ->
     nextTick => @_process
-      data: @value
+      valueOrReason: @value
       callback: pending.onFulfilled
       nextPromise: pending.nextPromise
-      fallback: pending.nextPromise.fulfill
+      onValue: pending.nextPromise.fulfill.bind pending.nextPromise
+      fulfillNext: pending.nextPromise.fulfill.bind pending.nextPromise
+      rejectNext: pending.nextPromise.reject.bind pending.nextPromise
 
-class RejectedPromise extends CompletedPromise
+class RejectedPromiseState extends ResolvedPromiseState
   constructor: (@reason, pendings=[]) -> super(pendings)
   _schedule_for_processing: (pending) ->
     nextTick => @_process
-      data: @reason
+      valueOrReason: @reason
       callback: pending.onRejected
       nextPromise: pending.nextPromise
-      fallback: pending.nextPromise.reject
+      onValue: pending.nextPromise.reject.bind pending.nextPromise
+      fulfillNext: pending.nextPromise.fulfill.bind pending.nextPromise
+      rejectNext: pending.nextPromise.reject.bind pending.nextPromise
