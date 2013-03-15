@@ -1,7 +1,7 @@
 should = require 'should'
 Promise = require('../promise2').Promise
 
-p = p2 = returnPromise = callback = null
+p = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}
 dummy2 = {dummy2: 'dummy2'}
 dummyReason = new Error 'dummyReason'
@@ -103,4 +103,43 @@ describe "Promise", ->
           it "p2 should be rejected with the returnPromise's reason", ->
             p.then(undefined, callback).status().should.eql 'rejected'
             p.then(undefined, callback).state.reason.should.eql dummyReason
+
+  describe "pending instance p", ->
+    describe ", p2=p.then(value, value)", ->
+      beforeEach -> p2 = p.then dummy2, dummy2
+      it "returns a pending promise", ->
+        type = typeof p2.then
+        type.should.eql 'function'
+        p2.status().should.eql 'pending'
+      it ", after p.fulfill(value), p2 is fulfilled with value", ->
+        p.fulfill(dummy)
+        p2.status().should.eql 'fulfilled'
+        p2.state.value.should.eql dummy
+      it ", after preject(reason), p2 is rejected with value", ->
+        p.reject(dummyReason)
+        p2.status().should.eql 'rejected'
+        p2.state.reason.should.eql dummyReason
+      describe ", and then p3=p.then(onFulfil, onReject)", ->
+        it "p2 should be fulfilled after p.fulfill", ->
+          p3=p.then( )
+          p.fulfill(dummy)
+          p2.status().should.eql 'fulfilled'
+        it "p2 and p3 should be fulfilled in sequence", (done) ->
+          p3=p.then(
+            ((value)->
+              p2.status().should.eql 'fulfilled'
+              value.should.eql dummy
+              done()),
+            ((reason)->throw new Error) )
+          p2.status().should.eql 'pending'
+          p.fulfill(dummy)
+        it "p2 and p3 should be rejected in sequence", (done) ->
+          p3=p.then(
+            ((value)->throw new Error),
+            ((reason)->
+              p2.status().should.eql 'rejected'
+              reason.should.eql dummyReason
+              done()))
+          p2.status().should.eql 'pending'
+          p.reject(dummyReason)
 

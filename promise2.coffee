@@ -16,11 +16,16 @@ class ThennableState
     p2
 
 class PendingState extends ThennableState
+  constructor: -> @pendeds = []
   status: -> 'pending'
-  fulfill: (value) -> new FulfilledState value
-  reject: (reason) -> new RejectedState reason
+  fulfill: (value) -> new FulfilledState value, @pendeds
+  reject: (reason) -> new RejectedState reason, @pendeds
+  _schedule: (f,r,p) -> @pendeds.push [f,r,p]
 
 class CompletedState extends ThennableState
+  constructor: (pendeds) ->
+    for pended in pendeds
+      do(pended) => @_schedule(pended...)
   fulfill: -> @
   reject: -> @
   _do: (datum, callback, fallback, p2) ->
@@ -47,13 +52,13 @@ class CompletedState extends ThennableState
   _isPromise: (thing)-> @_isFunction thing?.then
 
 class FulfilledState extends CompletedState
-  constructor: (@value) ->
+  constructor: (@value, pended) -> super pended
   status: -> 'fulfilled'
   _schedule: (onFulfill, __, p2) ->
     @_do @value, onFulfill, p2.fulfill, p2
 
 class RejectedState extends CompletedState
-  constructor: (@reason) ->
+  constructor: (@reason, pended) -> super pended
   status: -> 'rejected'
   _schedule: (__, onReject, p2) ->
     @_do @reason, onReject, p2.reject, p2

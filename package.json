@@ -4,7 +4,7 @@
   "description": "Promise/A+ compliant Promise implementation in Coffeescript",
   "main": "index.js",
   "scripts": {
-    "test": "node_modules/.bin/mocha --compilers :coffee-script tests/*.coffee"
+    "test": "node_modules/.bin/mocha --compilers :coffee-script test/*.coffee"
   },
   "repository": "",
   "author": "Andrew C. Greenberg (wizardwerdna@gmail.com)",
