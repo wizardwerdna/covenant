@@ -9,46 +9,51 @@ class Promise
 
 root.Promise = Promise
 
-class State
-  constructor: ->
-  reject: -> @
-  fulfill: -> @
+class ThennableState
+  then: (onFulfill, onReject) ->
+    p2 = new Promise
+    @_schedule(onFulfill, onReject, p2)
+    p2
 
-class PendingState extends State
+class PendingState extends ThennableState
   status: -> 'pending'
   fulfill: (value) -> new FulfilledState value
   reject: (reason) -> new RejectedState reason
 
-class CompletedState extends State
-  do: (datum, callback, fallback, p2) ->
-    if @_isNonFunction callback
-      fallback datum
+class CompletedState extends ThennableState
+  fulfill: -> @
+  reject: -> @
+  _do: (datum, callback, fallback, p2) ->
+    if @_isFunction callback
+      @_handleFunction arguments...
     else
-      try
-        if @_isPromise result=callback(datum)
-          switch result.status()
-            when 'fulfilled' then p2.fulfill result.state.value
-            when 'rejected' then  p2.reject result.state.reason
-            else throw new Error "nuh-uh"
-        else
-          p2.fulfill.bind(p2) result
-      catch e
-        p2.reject.bind(p2) e
-  _isPromise: (thing)-> typeof thing?.then is 'function'
-  _isNonFunction: (thing)-> typeof thing isnt 'function'
+      fallback datum
+  _handleFunction: (datum, callback, fallback, p2) ->
+    try
+      @_handleCallbackResults arguments...
+    catch e
+      p2.reject.bind(p2) e
+  _handleCallbackResults: (datum, callback, fallback, p2) ->
+    if @_isPromise result=callback(datum)
+      @_handleCallbackReturningPromise result, arguments...
+    else
+      p2.fulfill.bind(p2) result
+  _handleCallbackReturningPromise: (result, datum, callback, failback, p2) ->
+      switch result.status()
+        when 'fulfilled' then p2.fulfill result.state.value
+        when 'rejected' then  p2.reject result.state.reason
+        else throw new Error "nuh-uh"
+  _isFunction: (thing)-> typeof thing is 'function'
+  _isPromise: (thing)-> @_isFunction thing?.then
 
 class FulfilledState extends CompletedState
   constructor: (@value) ->
   status: -> 'fulfilled'
-  then: (onFulfill, __) ->
-    p2 = new Promise
-    @do @value, onFulfill, p2.fulfill.bind(p2), p2
-    p2
+  _schedule: (onFulfill, __, p2) ->
+    @_do @value, onFulfill, p2.fulfill.bind(p2), p2
 
 class RejectedState extends CompletedState
   constructor: (@reason) ->
   status: -> 'rejected'
-  then: (__, onReject) ->
-    p2 = new Promise
-    @do @reason, onReject, p2.reject.bind(p2), p2
-    p2
+  _schedule: (__, onReject, p2) ->
+    @_do @reason, onReject, p2.reject.bind(p2), p2
