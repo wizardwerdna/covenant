@@ -1,7 +1,7 @@
 should = require 'should'
 Promise = require('../promise').Promise
 
-describe "Promises/A+ Test Suite", ->
+xdescribe "Promises/A+ Test Suite", ->
   @slow(500)
   require('promises-aplus-tests').mocha
     fulfilled: (value) -> (new Promise).fulfill(value)
