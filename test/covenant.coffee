@@ -1,5 +1,5 @@
 should = require 'should'
-Oath = require('../oath').Oath
+Covenant = require('../covenant').Covenant
 
 p = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}
@@ -8,7 +8,7 @@ dummyReason = new Error 'dummyReason'
 
 describe "Promise", ->
   beforeEach ->
-    p = new Oath
+    p = new Covenant
 
   describe "state transitions", ->
     it "should default to a pending state", ->
@@ -69,7 +69,7 @@ describe "Promise", ->
             done()
       describe ", and function returns a promise", ->
         beforeEach ->
-          returnPromise = new Oath
+          returnPromise = new Covenant
           callback = -> returnPromise
         describe "fulfilled with a value", ->
           beforeEach -> returnPromise.fulfill dummy2
@@ -115,7 +115,7 @@ describe "Promise", ->
             done()
       describe ", and function returns a promise", ->
         beforeEach ->
-          returnPromise = new Oath
+          returnPromise = new Covenant
           callback = -> returnPromise
         describe "fulfilled with a value", ->
           beforeEach -> returnPromise.fulfill dummy2
@@ -181,7 +181,7 @@ describe "Promise", ->
 
   describe "pending promise p, when p2=p.then(f,r), and f returns a promise", ->
     beforeEach ->
-      returnPromise = new Oath
+      returnPromise = new Covenant
       p2 = p.then((->returnPromise), (->returnPromise))
     describe ", p is fulfilled", ->
       beforeEach -> p.fulfill(dummy)

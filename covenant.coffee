@@ -4,18 +4,18 @@ nextTick = (process?.nextTick) or
            (typeof setImmediate == 'function' && setImmediate) or
            (task) -> setTimeout(task, 0)
 
-class Oath
+class Covenant
   constructor: -> @state = new PendingState
   status: -> @state.status()
   fulfill: (value) -> @state = @state.fulfill(value)
   reject: (reason) -> @state = @state.reject(reason)
   then: (a,b) -> @state.then(a,b)
 
-root.Oath = Oath
+root.Covenant = Covenant
 
 class ThennableState
   then: (onFulfill, onReject) ->
-    p2 = new Oath
+    p2 = new Covenant
     @_schedule(onFulfill, onReject, p2)
     p2
 

@@ -1,39 +1,39 @@
-# oath 
-<img src="http://promises-aplus.github.com/promises-spec/assets/logo-small.png" style="outline: 1pt solid brown;" align="right" /> Oath is a 64-line [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Oath passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  It compiles to under 200 lines of javascript, less than 500 bytes without compression.  
+# covenant 
+<img src="http://promises-aplus.github.com/promises-spec/assets/logo-small.png" style="outline: 1pt solid brown;" align="right" /> Covenant is a 64-line [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  It compiles to under 200 lines of javascript, less than 500 bytes without compression.  
 
  
 ## Installation 
 
-Download it, clone it, or `npm install wizardwerdna/oath`
+Download it, clone it, or `npm install wizardwerdna/covenant`
 
-Oath has no dependencies, but does use process.nextTick, found in modern Browsers.  If process.nextTick is not a function, Oath falls back to setImmediate, and then to setTimeout.  If you are using ancient browsers, it is highly recommended that you use a shim to implement (fake) nextTick and/or setImmediate.
+Covenant has no dependencies, but does use process.nextTick, found in modern Browsers.  If process.nextTick is not a function, Covenant falls back to setImmediate, and then to setTimeout.  If you are using ancient browsers, it is highly recommended that you use a shim to implement (fake) nextTick and/or setImmediate.
 
 ## The API
 
 ```coffeescript
 
 # get the Promise class
-Oath = require('oath').Oath;
+Covenant = require('covenant').Covenant;
 
 # create a new pending promise
-oath = new Promise
+covenant = new Promise
 
 # fulfill it
-oath.fulfill(value)
+covenant.fulfill(value)
 
 # reject it
-oath.reject(reason)
+covenant.reject(reason)
 
 # schedule asynchronous handers
-oath.then onFulfilled, onRejected
+covenant.then onFulfilled, onRejected
 
 ```
 
 ## Why another promise implementation?
 
-I set out to write Oath, just for myself, so to achieve a better understanding of the nuances of the Promise pattern.  The Promises/A+ specification seemed elegant, but I couldn't seem to grok it without more. Reading the code of various compliant mplementations was helpful, but I still didn't seem to own it.  I began the experiment by "cowboy" coding a first set, using the test suite to verify that things were working.  Finally, I discarded that code as one to throw away, and rebuilt it in pure BDD red-green-refactor style.
+I set out to write Covenant, just for myself, so to achieve a better understanding of the nuances of the Promise pattern.  The Promises/A+ specification seemed elegant, but I couldn't seem to grok it without more. Reading the code of various compliant mplementations was helpful, but I still didn't seem to own it.  I began the experiment by "cowboy" coding a first set, using the test suite to verify that things were working.  Finally, I discarded that code as one to throw away, and rebuilt it in pure BDD red-green-refactor style.
 
-Having a well-understood testbed for promises, I will probably extend oath to a more full-featured implementation.
+Having a well-understood testbed for promises, I will probably extend covenant to a more full-featured implementation.
 
 ## Credits
 

@@ -1,12 +1,12 @@
 should = require 'should'
-Oath = require('../oath').Oath
+Covenant = require('../covenant').Covenant
 
-describe "Run oath against the Promises/A+ Test Suite", ->
+describe "Run covenant against the Promises/A+ Test Suite", ->
   @slow(500)
   require('promises-aplus-tests').mocha
-    fulfilled: (value) -> (new Oath).fulfill(value)
-    rejected: (reason) -> (new Oath).reject(reason)
+    fulfilled: (value) -> (new Covenant).fulfill(value)
+    rejected: (reason) -> (new Covenant).reject(reason)
     pending: ->
-      promise: new Oath
+      promise: new Covenant
       fulfill: (value) -> @promise.fulfill(value)
       reject: (reason) -> @promise.reject(reason)
