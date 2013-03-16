@@ -40,14 +40,9 @@ class CompletedState extends ThennableState
       p2.reject.call p2, e
   _handleCallbackResults: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      @_handleCallbackReturningPromise result, arguments...
+      result.then p2.fulfill.bind(p2), p2.reject.bind(p2)
     else
       p2.fulfill.call p2, result
-  _handleCallbackReturningPromise: (result, datum, callback, failback, p2) ->
-    switch result.status()
-      when 'fulfilled' then p2.fulfill result.state.value
-      when 'rejected' then  p2.reject result.state.reason
-      else throw new Error "nuh-uh"
   _isFunction: (thing)-> typeof thing is 'function'
   _isPromise: (thing)-> @_isFunction thing?.then
 
@@ -55,10 +50,12 @@ class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
   status: -> 'fulfilled'
   _schedule: (onFulfill, __, p2) ->
-    @_do @value, onFulfill, p2.fulfill, p2
+    process.nextTick =>
+      @_do @value, onFulfill, p2.fulfill, p2
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
   status: -> 'rejected'
   _schedule: (__, onReject, p2) ->
-    @_do @reason, onReject, p2.reject, p2
+    process.nextTick =>
+      @_do @reason, onReject, p2.reject, p2
