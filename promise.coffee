@@ -1,74 +1,61 @@
 root = (exports ? this)
 
-nextTick = (process?.nextTick) or
-           (typeof setImmediate == 'function' && setImmediate) or
-           (task) -> setTimeout(task, 0)
+class Promise
+  constructor: -> @state = new PendingState
+  status: -> @state.status()
+  fulfill: (value) -> @state = @state.fulfill(value)
+  reject: (reason) -> @state = @state.reject(reason)
+  then: (a,b) -> @state.then(a,b)
 
-root.Promise = class Promise
-  constructor: (@state=new PendingPromiseState)->
-  fulfill: (value) -> @state = @state.fulfill value
-  reject: (reason) -> @state = @state.reject reason
-  then: (onFulfilled, onRejected) ->
-    @state.then onFulfilled, onRejected
-root.make = -> new Promise
+root.Promise = Promise
 
-class ThenableStrategy
-  then: (onFulfilled, onRejected) ->
-    promise2 = new Promise
-    @_schedule_for_processing
-      onFulfilled: onFulfilled
-      onRejected: onRejected
-      nextPromise: promise2
-    promise2
+class ThennableState
+  then: (onFulfill, onReject) ->
+    p2 = new Promise
+    @_schedule(onFulfill, onReject, p2)
+    p2
 
-class PendingPromiseState extends ThenableStrategy
-  constructor: -> @pendings = []
-  fulfill: (value)-> new FulfilledPromiseState value, @pendings
-  reject: (reason)-> new RejectedPromiseState reason, @pendings
-  _schedule_for_processing: (params) -> @pendings.push params
+class PendingState extends ThennableState
+  constructor: -> @pendeds = []
+  status: -> 'pending'
+  fulfill: (value) -> new FulfilledState value, @pendeds
+  reject: (reason) -> new RejectedState reason, @pendeds
+  _schedule: (f,r,p) -> @pendeds.push [f,r,p]
 
-class ResolvedPromiseState extends ThenableStrategy
-  constructor: (pendings=[])-> @_schedulePendedCallbacks(pendings)
-  fulfill: (value) ->
-  reject: (value) ->
-  _process: (pending) ->
+class CompletedState extends ThennableState
+  constructor: (pendeds) ->
+    for pended in pendeds
+      do(pended) => @_schedule(pended...)
+  fulfill: -> @
+  reject: -> @
+  _do: (datum, callback, fallback, p2) ->
+    if @_isFunction callback
+      @_handleFunction arguments...
+    else
+      fallback.call p2, datum
+  _handleFunction: (datum, callback, fallback, p2) ->
     try
-      @_processCallbackFunctionOrValue pending
+      @_handleCallbackResults arguments...
     catch e
-      pending.rejectNext e
-  _processCallbackFunctionOrValue: (pending) ->
-    if @_isFunction pending.callback
-      @_processCallbackFunction(pending)
+      p2.reject.call p2, e
+  _handleCallbackResults: (datum, callback, fallback, p2) ->
+    if @_isPromise result=callback(datum)
+      result.then p2.fulfill.bind(p2), p2.reject.bind(p2)
     else
-      pending.onValue pending.valueOrReason
-  _processCallbackFunction: (pending) ->
-    promiseOrValue = pending.callback pending.valueOrReason
-    if @_isPromise(promiseOrValue)
-      promiseOrValue.then pending.fulfillNext, pending.rejectNext
-    else
-      pending.fulfillNext promiseOrValue
-  _schedulePendedCallbacks: (pendings)->
-    for pending in pendings
-      do(pending) => @_schedule_for_processing pending
-  _isPromise: (p) -> @_isFunction(p?.then)
-  _isFunction: (f) -> typeof f == 'function'
+      p2.fulfill.call p2, result
+  _isFunction: (thing)-> typeof thing is 'function'
+  _isPromise: (thing)-> @_isFunction thing?.then
 
-class FulfilledPromiseState extends ResolvedPromiseState
-  constructor: (@value, pendings=[]) -> super(pendings)
-  _schedule_for_processing: (pending) ->
-    nextTick => @_process
-      valueOrReason: @value
-      callback: pending.onFulfilled
-      onValue: pending.nextPromise.fulfill.bind pending.nextPromise
-      fulfillNext: pending.nextPromise.fulfill.bind pending.nextPromise
-      rejectNext: pending.nextPromise.reject.bind pending.nextPromise
+class FulfilledState extends CompletedState
+  constructor: (@value, pended) -> super pended
+  status: -> 'fulfilled'
+  _schedule: (onFulfill, __, p2) ->
+    process.nextTick =>
+      @_do @value, onFulfill, p2.fulfill, p2
 
-class RejectedPromiseState extends ResolvedPromiseState
-  constructor: (@reason, pendings=[]) -> super(pendings)
-  _schedule_for_processing: (pending) ->
-    nextTick => @_process
-      valueOrReason: @reason
-      callback: pending.onRejected
-      onValue: pending.nextPromise.reject.bind pending.nextPromise
-      fulfillNext: pending.nextPromise.fulfill.bind pending.nextPromise
-      rejectNext: pending.nextPromise.reject.bind pending.nextPromise
+class RejectedState extends CompletedState
+  constructor: (@reason, pended) -> super pended
+  status: -> 'rejected'
+  _schedule: (__, onReject, p2) ->
+    process.nextTick =>
+      @_do @reason, onReject, p2.reject, p2

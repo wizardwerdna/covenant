@@ -1,5 +1,5 @@
 should = require 'should'
-Promise = require('../promise2').Promise
+Promise = require('../promise').Promise
 
 describe "Promises/A+ Test Suite", ->
   @slow(500)

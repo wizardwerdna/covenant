@@ -1,5 +1,5 @@
 should = require 'should'
-Promise = require('../promise2').Promise
+Promise = require('../promise').Promise
 
 p = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}
