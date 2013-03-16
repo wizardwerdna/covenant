@@ -1,17 +1,21 @@
 root = (exports ? this)
 
-class Promise
+nextTick = (process?.nextTick) or
+           (typeof setImmediate == 'function' && setImmediate) or
+           (task) -> setTimeout(task, 0)
+
+class Oath
   constructor: -> @state = new PendingState
   status: -> @state.status()
   fulfill: (value) -> @state = @state.fulfill(value)
   reject: (reason) -> @state = @state.reject(reason)
   then: (a,b) -> @state.then(a,b)
 
-root.Promise = Promise
+root.Oath = Oath
 
 class ThennableState
   then: (onFulfill, onReject) ->
-    p2 = new Promise
+    p2 = new Oath
     @_schedule(onFulfill, onReject, p2)
     p2
 
@@ -40,7 +44,8 @@ class CompletedState extends ThennableState
       p2.reject.call p2, e
   _handleCallbackResults: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      result.then p2.fulfill.bind(p2), p2.reject.bind(p2)
+      result.then ((value)-> p2.fulfill(value)),
+        ((reason)-> p2.reject(reason))
     else
       p2.fulfill.call p2, result
   _isFunction: (thing)-> typeof thing is 'function'
@@ -50,12 +55,10 @@ class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
   status: -> 'fulfilled'
   _schedule: (onFulfill, __, p2) ->
-    process.nextTick =>
-      @_do @value, onFulfill, p2.fulfill, p2
+    nextTick => @_do @value, onFulfill, p2.fulfill, p2
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
   status: -> 'rejected'
   _schedule: (__, onReject, p2) ->
-    process.nextTick =>
-      @_do @reason, onReject, p2.reject, p2
+    nextTick => @_do @reason, onReject, p2.reject, p2
