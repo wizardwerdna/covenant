@@ -10,13 +10,24 @@ Covenant has no dependencies, but does use process.nextTick, found in modern Bro
 
 ## The API
 
-```coffeescript
+```javascript
+// load the coffeescript compiler (unless running precompiled version)
+// and then follow up with obvious variations of the coffeescript below
+require('coffee-script');
+```
 
+```bash
+# alternatively, simply transpile a direct javascript file and use that
+# instead
+coffee -c node_modules/covenant/covenant.coffee
+```
+
+```coffeescript
 # get the Promise class
-Covenant = require('covenant').Covenant;
+Covenant = require('covenant').Covenant
 
 # create a new pending promise
-covenant = new Promise
+covenant = new Covenant
 
 # fulfill it
 covenant.fulfill(value)
@@ -26,7 +37,6 @@ covenant.reject(reason)
 
 # schedule asynchronous handers
 covenant.then onFulfilled, onRejected
-
 ```
 
 ## Why another promise implementation?
@@ -37,9 +47,7 @@ Having a well-understood testbed for promises, I will probably extend covenant t
 
 ## Credits
 
-I am indebted, in particular, to the work of Brian Cavalier, whose 
-[when.js](https://github.com/cujojs/when), and [avow.js](https://github.com/briancavalier/avow)
-libraries illuminate what can be done both in a full-featured and minimalist implementation.
+I am indebted, in particular, to the work of Brian Cavalier, whose [when.js](https://github.com/cujojs/when), and [avow.js](https://github.com/briancavalier/avow) libraries illuminate what can be done both in a full-featured and minimalist implementation.
 
 ## Running the tests
 
