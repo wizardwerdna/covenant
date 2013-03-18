@@ -6,12 +6,11 @@ nextTick = (process?.nextTick) or
 
 class Covenant
   constructor: -> @state = new PendingState
-  status: -> @state.status()
-  fulfill: (value) -> @state = @state.fulfill(value)
-  reject: (reason) -> @state = @state.reject(reason)
+  fulfill: (value) -> @state = @state.fulfill(value); @
+  reject: (reason) -> @state = @state.reject(reason); @
   then: (onFulfill, onReject) ->
-    p2 = new Covenant
-    @_schedule(onFulfill, onReject, p2)
+    p2 = new @constructor
+    @state._schedule(onFulfill, onReject, p2)
     p2
 
 root.Covenant = Covenant
@@ -38,13 +37,14 @@ class CompletedState
     try
       @_handleCallbackResults arguments...
     catch e
-      p2.reject.call p2, e
+      p2.reject e
   _handleCallbackResults: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      result.then ((value)-> p2.fulfill(value)),
-        ((reason)-> p2.reject(reason))
+      result.then (
+        (value)-> p2.fulfill(value) ),(
+        (reason)-> p2.reject(reason) )
     else
-      p2.fulfill.call p2, result
+      p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
   _isPromise: (thing)-> @_isFunction thing?.then
 

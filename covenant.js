@@ -17,22 +17,20 @@
       this.state = new PendingState;
     }
 
-    Covenant.prototype.status = function() {
-      return this.state.status();
-    };
-
     Covenant.prototype.fulfill = function(value) {
-      return this.state = this.state.fulfill(value);
+      this.state = this.state.fulfill(value);
+      return this;
     };
 
     Covenant.prototype.reject = function(reason) {
-      return this.state = this.state.reject(reason);
+      this.state = this.state.reject(reason);
+      return this;
     };
 
     Covenant.prototype.then = function(onFulfill, onReject) {
       var p2;
-      p2 = new Covenant;
-      this._schedule(onFulfill, onReject, p2);
+      p2 = new this.constructor;
+      this.state._schedule(onFulfill, onReject, p2);
       return p2;
     };
 
@@ -102,7 +100,7 @@
       try {
         return this._handleCallbackResults.apply(this, arguments);
       } catch (e) {
-        return p2.reject.call(p2, e);
+        return p2.reject(e);
       }
     };
 
@@ -115,7 +113,7 @@
           return p2.reject(reason);
         }));
       } else {
-        return p2.fulfill.call(p2, result);
+        return p2.fulfill(result);
       }
     };
 
