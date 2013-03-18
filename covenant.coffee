@@ -9,24 +9,21 @@ class Covenant
   status: -> @state.status()
   fulfill: (value) -> @state = @state.fulfill(value)
   reject: (reason) -> @state = @state.reject(reason)
-  then: (a,b) -> @state.then(a,b)
-
-root.Covenant = Covenant
-
-class ThennableState
   then: (onFulfill, onReject) ->
     p2 = new Covenant
     @_schedule(onFulfill, onReject, p2)
     p2
 
-class PendingState extends ThennableState
+root.Covenant = Covenant
+
+class PendingState
   constructor: -> @pendeds = []
   status: -> 'pending'
   fulfill: (value) -> new FulfilledState value, @pendeds
   reject: (reason) -> new RejectedState reason, @pendeds
   _schedule: (f,r,p) -> @pendeds.push [f,r,p]
 
-class CompletedState extends ThennableState
+class CompletedState
   constructor: (pendeds) ->
     for pended in pendeds
       do(pended) => @_schedule(pended...)
