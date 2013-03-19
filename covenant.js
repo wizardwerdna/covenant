@@ -7,7 +7,7 @@
 
   root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
-  nextTick = (typeof process !== "undefined" && process !== null ? process.nextTick : void 0) || (typeof setImmediate === 'function' && setImmediate) || function(task) {
+  nextTick = (typeof setImmediate === 'function' && setImmediate) || (typeof process !== "undefined" && process !== null ? process.nextTick : void 0) || function(task) {
     return setTimeout(task, 0);
   };
 

@@ -44,7 +44,7 @@ describe "Promise", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.then(nonFunction, __) returns p2 fulfilled with value", (done)->
       p2 = p.then(undefined, undefined)
-      process.nextTick ->
+      setImmediate ->
         p2.state.status().should.eql 'fulfilled'
         p2.state.value.should.eql dummy
         done()
@@ -56,14 +56,14 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.then( (->dummy2), undefined)
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.then( (->throw dummyReason), undefined )
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             done()
@@ -92,7 +92,7 @@ describe "Promise", ->
     beforeEach -> p.reject(dummy)
     it ", p2=p.then(__, nonFunction) returns p2 rejected with reason", (done)->
       p2 = p.then(undefined, undefined)
-      process.nextTick ->
+      setImmediate ->
         p2.state.status().should.eql 'rejected'
         p2.state.reason.should.eql dummy
         done()
@@ -102,14 +102,14 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.then( undefined, (->dummy2))
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.then( undefined, (->throw dummyReason))
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             done()
@@ -143,13 +143,13 @@ describe "Promise", ->
         p2.state.status().should.eql 'pending'
       it ", after p.fulfill(value), p2 is fulfilled with value", (done)->
         p.fulfill(dummy)
-        process.nextTick ->
+        setImmediate ->
           p2.state.status().should.eql 'fulfilled'
           p2.state.value.should.eql dummy
           done()
       it ", after reject(reason), p2 is rejected with value", (done)->
         p.reject(dummyReason)
-        process.nextTick ->
+        setImmediate ->
           p2.state.status().should.eql 'rejected'
           p2.state.reason.should.eql dummyReason
           done()
@@ -157,7 +157,7 @@ describe "Promise", ->
         it "p2 should be fulfilled after p.fulfill", (done)->
           p3=p.then( )
           p.fulfill(dummy)
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             done()
         it "p2 and p3 should be fulfilled in sequence", (done) ->
@@ -199,7 +199,7 @@ describe "Promise", ->
       describe ", after returnPromise.reject(reason)", ->
         beforeEach -> returnPromise.reject(dummyReason)
         it ", p2 should be rejected for the reason", (done)->
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             done()
@@ -219,7 +219,7 @@ describe "Promise", ->
       describe ", after returnPromise.reject(reason)", ->
         beforeEach -> returnPromise.reject(dummyReason)
         it ", p2 should be rejected for the reason", (done)->
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             done()

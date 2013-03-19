@@ -1,7 +1,7 @@
 root = (exports ? this)
 
-nextTick = (process?.nextTick) or
-           (typeof setImmediate == 'function' && setImmediate) or
+nextTick = (typeof setImmediate == 'function' && setImmediate) or
+           (process?.nextTick) or
            (task) -> setTimeout(task, 0)
 
 class Covenant

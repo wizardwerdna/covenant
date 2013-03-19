@@ -47,7 +47,7 @@ describe "Promise", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.done(nonFunction) returns p2 fulfilled with value", (done)->
       p2 = p.done(undefined)
-      process.nextTick ->
+      setImmediate ->
         p2.state.status().should.eql 'fulfilled'
         p2.state.value.should.eql dummy
         done()
@@ -57,14 +57,14 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.done ->dummy2
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.done ->throw dummyReason
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             done()
@@ -93,7 +93,7 @@ describe "Promise", ->
     beforeEach -> p.reject(dummy)
     it ", p2=p.fail(nonFunction) returns p2 rejected with reason", (done)->
       p2 = p.fail(undefined)
-      process.nextTick ->
+      setImmediate ->
         p2.state.status().should.eql 'rejected'
         p2.state.reason.should.eql dummy
         done()
@@ -103,14 +103,14 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.fail -> dummy2
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.fail ->throw dummyReason
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             done()
@@ -139,7 +139,7 @@ describe "Promise", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.always(nonFunction) returns p2 fulfilled with value", (always)->
       p2 = p.always(undefined)
-      process.nextTick ->
+      setImmediate ->
         p2.state.status().should.eql 'fulfilled'
         p2.state.value.should.eql dummy
         always()
@@ -149,14 +149,14 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (always)->
           p2 = p.always ->dummy2
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             p2.state.value.should.eql dummy2
             always()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (always)->
           p2 = p.always ->throw dummyReason
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             always()
@@ -185,7 +185,7 @@ describe "Promise", ->
     beforeEach -> p.reject(dummy)
     it ", p2=p.always(nonFunction) returns p2 rejected with reason", (always)->
       p2 = p.always(undefined)
-      process.nextTick ->
+      setImmediate ->
         p2.state.status().should.eql 'rejected'
         p2.state.reason.should.eql dummy
         always()
@@ -195,14 +195,14 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (always)->
           p2 = p.always -> dummy2
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'fulfilled'
             p2.state.value.should.eql dummy2
             always()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (always)->
           p2 = p.always ->throw dummyReason
-          process.nextTick ->
+          setImmediate ->
             p2.state.status().should.eql 'rejected'
             p2.state.reason.should.eql dummyReason
             always()
