@@ -6,7 +6,7 @@ dummy = {dummy: 'dummy'}
 dummy2 = {dummy2: 'dummy2'}
 dummyReason = new Error 'dummyReason'
 
-describe "Promise", ->
+describe "Covenant", ->
   beforeEach ->
     p = new Covenant
 

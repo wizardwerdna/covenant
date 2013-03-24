@@ -1,11 +1,12 @@
 root = (exports ? this)
 
-nextTick = (typeof setImmediate == 'function' && setImmediate) or
-           (process?.nextTick) or
+bestTick = (process?.nextTick) or
+           (typeof setImmediate == 'function' && setImmediate) or
            (task) -> setTimeout(task, 0)
 
 class Covenant
-  constructor: -> @state = new PendingState
+  constructor: ->
+    @state = new PendingState
   fulfill: (value) -> @state = @state.fulfill(value); @
   reject: (reason) -> @state = @state.reject(reason); @
   then: (onFulfill, onReject) ->
@@ -41,8 +42,8 @@ class CompletedState
   _handleCallbackResults: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
       result.then (
-        (value)-> p2.fulfill(value) ),(
-        (reason)-> p2.reject(reason) )
+        (value)-> p2.fulfill(value); null ),(
+        (reason)-> p2.reject(reason); null )
     else
       p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
@@ -52,10 +53,10 @@ class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
   status: -> 'fulfilled'
   _schedule: (onFulfill, __, p2) ->
-    nextTick => @_do @value, onFulfill, p2.fulfill, p2
+    bestTick => @_do @value, onFulfill, p2.fulfill, p2
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
   status: -> 'rejected'
   _schedule: (__, onReject, p2) ->
-    nextTick => @_do @reason, onReject, p2.reject, p2
+    bestTick => @_do @reason, onReject, p2.reject, p2
