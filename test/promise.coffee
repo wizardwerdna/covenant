@@ -265,25 +265,73 @@ describe "Promise", ->
           done()
         thenHasReturned = true
 
-  describe "After p = Promise.when(p1, p2, p3)", ->
+  describe "After p = Promise.when(v1, v2, v3), all values", ->
+    beforeEach -> p = Promise.when dummy1, dummy2, dummy3
+    it "should synchronously return an aggregate promise", ->
+      'function'.should.eql typeof p?.then
+    it "should synchronously return a fulfilled promise", ->
+      p.state.status().should.eql 'fulfilled'
+    it "should synchronously return a promise fulfilled with the values", ->
+      p.state.value.should.eql [dummy1, dummy2, dummy3]
+  describe "After p = Promise.when(v1, v2, p1), p1 a value-fulfilled promise", ->
     beforeEach ->
-      [p1, p2, p3] = [new Promise, new Promise, new Promise]
-      p = Promise.when(p1, p2, p3)
+      p1 = Promise.fulfilled(dummy3)
+      p = Promise.when dummy1, dummy2, p1
+    it "should return a fulfilled promise with the appropriate value array", (done)->
+      setTimeout (->
+        p.state.status().should.eql 'fulfilled'
+        p.state.value.should.eql [dummy1, dummy2, dummy3]
+        done()), 20
+  describe "After p = Promise.when(v1, v2, p1), p1 a value-rejected promise", ->
+    beforeEach ->
+      p1 = Promise.rejected(dummyReason)
+      p = Promise.when dummy1, dummy2, p1
+    it "should return a fulfilled promise with the appropriate value array", (done)->
+      setTimeout (->
+        p.state.status().should.eql 'rejected'
+        p.state.reason.should.eql dummyReason
+        done()), 20
+  describe "After p = Promise.when(v1, p1, p2), p1 and p2 pending promises", ->
+    beforeEach ->
+      [p1, p2] = [new Promise, new Promise]
+      p = Promise.when(dummy1, p1, p2)
     it "should be pending when not all promises have been fulfilled", ->
-      p1.fulfill(dummy)
-      p2.fulfill(dummy)
-      p.state.status.should == 'pending'
-    it "should be fulfilled wth an array of results after fullfilling all promises", (done) ->
-      p3.fulfill(dummy3)
-      p1.fulfill(dummy1)
-      p2.fulfill(dummy2)
+      p1.fulfill(dummy2)
+      p.state.status().should.eql 'pending'
+    it "should be fulfilled wth a value array after promises are fulfilled with values", (done) ->
+      p1.fulfill(dummy2)
+      p2.fulfill(dummy3)
       p.then (result) ->
         result.should.eql [dummy1, dummy2, dummy3]
         done()
-    it "should be rejected with the reason given by the first response rejected", (done) ->
-      p3.fulfill(dummy3)
-      p2.reject(dummy2)
-      p1.reject(dummy1)
+    it "should be rejected with the reason after the first promise is rejected", (done) ->
+      p1.reject(dummyReason)
+      p2.fulfill(dummy1)
       p.then null, (reason) ->
-        reason.should.eql dummy2
+        reason.should.eql dummyReason
         done()
+    it "should remain pending after one of p1 is fulfilled with a pending promise", (done) ->
+      p3 = new Promise
+      p1.fulfill(p3)
+      p2.fulfill(dummy3)
+      setTimeout (->
+        p.state.status().should.eql 'pending'
+        done()), 20
+    it "should be fulfilled after p1 is fulfilled with a pending promise, later fulfilled", (done) ->
+      p3 = new Promise
+      p1.fulfill(p3)
+      p2.fulfill(dummy3)
+      p3.fulfill(dummy2)
+      setTimeout (->
+        p.state.status().should.eql 'fulfilled'
+        p.state.value.should.eql [dummy1, dummy2, dummy3]
+        done()), 20
+    it "should be rejected after p1 is fulfilled with a pending promise, later rejected", (done) ->
+      p3 = new Promise
+      p1.fulfill(p3)
+      p2.fulfill(dummy3)
+      p3.reject(dummyReason)
+      setTimeout (->
+        p.state.status().should.eql 'rejected'
+        p.state.reason.should.eql dummyReason
+        done()), 20

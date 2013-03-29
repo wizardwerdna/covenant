@@ -7,8 +7,8 @@ bestTick = (process?.nextTick) or
 class Covenant
   constructor: ->
     @state = new PendingState
-  fulfill: (value) -> @state = @state.fulfill(value); @
-  reject: (reason) -> @state = @state.reject(reason); @
+  fulfill: (value) => @state = @state.fulfill(value)
+  reject: (reason) => @state = @state.reject(reason)
   then: (onFulfill, onReject) ->
     p2 = new @constructor
     @state._schedule(onFulfill, onReject, p2)
@@ -41,9 +41,7 @@ class CompletedState
       p2.reject e
   _handleCallbackResults: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      result.then (
-        (value)-> p2.fulfill(value); null ),(
-        (reason)-> p2.reject(reason); null )
+      result.then p2.fulfill, p2.reject
     else
       p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
