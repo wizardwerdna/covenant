@@ -4,32 +4,21 @@ root = (exports ? this)
 class Promise extends Covenant
   constructor: -> super()
   # constructors
-  @pending: -> new Promise
-  @fulfilled: (value) -> p=new Promise; p.fulfill(value); p
-  @rejected: (reason) -> p=new Promise; p.reject(reason); p
-  
-  # wrappers
-  @fromNode: (f)->
-    (args...) ->
-      p = new Promise
-      args.push (err, value) ->
-        if err then p.reject(err) else p.fulfill(value)
-      f(args...)
-      p
-  
-  # temporal promises
-  @delay: (ms)->
-    p = new Promise
-    setTimeout (->p.fulfill()), ms
-    p
-  @timeout: (ms, p) ->
-    setTimeout (->p.reject new Error "timeout after #{ms} milliseconds"), ms
-    p
+  @makePromise: (f) -> p = new Promise; f(p); p
+  @pending: => @makePromise ->
+  @fulfilled: (value) => @makePromise (p)-> p.fulfill(value)
+  @rejected: (reason) => @makePromise (p)-> p.reject(reason)
+  @fromNode: (f)=>
+    (args...) => @makePromise (p)->
+      f(args..., p._nodeResolver)
+  @delay: (ms)=> @makePromise (p)-> setTimeout(p.fulfill, ms)
+  @timeout: (ms, p) => @makePromise (p2)->
+    p.then p2.fulfill, p2.reject
+    err = new Error "timeout after #{ms} milliseconds"
+    setTimeout (-> p.reject err), ms
   
   # aggregate promises
-  @all: Promise.when
-  @when: (promises...) ->
-    pAll = @pending()
+  @when: (promises...) => @makePromise (pAll)=>
     pAll.results = new Array promises.length
     pAll.numLeft = promises.length
     if promises.length == 0
@@ -37,7 +26,7 @@ class Promise extends Covenant
     else
       for p, i in promises
         do(p, i) => @_scheduleResolution(pAll,p,i)
-    pAll
+  @all: @when
   
   # convenience instance functions
   done: (onFulfill) -> @then onFulfill
@@ -67,4 +56,6 @@ class Promise extends Covenant
 
   @_isPromise: (p) -> typeof p?.then == 'function'
 
+  _nodeResolver: (err, value) =>
+    if err then @reject(err) else @fulfill(value)
 root.Promise = Promise

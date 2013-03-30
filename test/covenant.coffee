@@ -1,5 +1,5 @@
 should = require 'should'
-{Covenant} = require('../index')
+{Covenant} = require('../covenant')
 
 # test scaffolding
 p = p2 = p3 = returnPromise = callback = null

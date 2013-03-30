@@ -1,5 +1,5 @@
 should = require 'should'
-{Promise} = require('../index')
+{Promise} = require('../promise')
 
 # test scaffold
 p = p1 = p2 = p3 = returnPromise = callback = null
@@ -318,6 +318,14 @@ describe "Promise", ->
       setTimeout (->
         p.state.reason.should.eql dummyReason
         done()), 20
+    it "should be fulfilled with values if p1, p2 and p3 were all initially fulfilled", (done)->
+      p1 = Promise.fulfilled(1)
+      p2 = Promise.fulfilled(2)
+      p3 = Promise.fulfilled(3)
+      p = Promise.when(p1, p2, p3)
+      setTimeout (->
+        p.state.value.should.eql [1,2,3]
+        done()), 20
 
   describe "Promise.fromNode", ->
     describe "when passed a function f", ->
@@ -359,21 +367,22 @@ describe "Promise", ->
       p2 = Promise.timeout(20, p)
     it "should return a promise p2", ->
       p2?.then.should.be.a 'function'
-    it "if p not resolved, p2 remains pending until ms milliseconds have passed", (done)->
+    it "if p not resolved, p2 remains pending before ms milliseconds", (done)->
       setTimeout (->
         testPending(p2)
         done()), 17
-    it "if p not resolved beforehand, p2 should be rejected after ms milliseconds have passed", (done)->
+    it "if p not resolved in time, p2 should be rejected after ms milliseconds", (done)->
       p = Promise.delay(20)
       setTimeout (->
         p2.state.reason.should.eql new Error "timeout after 20 milliseconds"
         done()), 25
     it "if p fulfilled before ms milliseconds, it remains so resolved afterward", (done)->
       p.fulfill(dummy1)
+      console.log p
       setTimeout (->
         p2.state.value.should.eql dummy1
         done()), 25
-    it "if p rejected before ms milliseconds, it remains so resolved afterward", (done) ->
+    it "if p rejected before ms milliseconds, it remains so rejected afterward", (done) ->
       p.reject(dummyReason)
       setTimeout (->
         p2.state.reason.should.eql dummyReason
