@@ -1,5 +1,10 @@
-# covenant 
-<img src="http://promises-aplus.github.com/promises-spec/assets/logo-small.png" style="outline: 1pt solid brown;" align="right" /> Covenant is a 64-line [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  It compiles to under 200 lines of javascript, less than 500 bytes without compression.  
+[![Build Status](https://travis-ci.org/wizardwerdna/covenant.png)](https://travis-ci.org/wizardwerdna/covenant)
+<img src="http://promises-aplus.github.com/promises-spec/assets/logo-small.png" style="outline: 1pt solid brown;" align="right" /> 
+
+
+# Covenant 
+
+Covenant is a 64-line [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  It compiles to under 200 lines of javascript, less than 500 bytes without compression.  
 
  
 ## Installation 
