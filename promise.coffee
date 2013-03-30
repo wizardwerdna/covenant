@@ -57,9 +57,9 @@ class Promise extends Covenant
     
   @_scheduleResolution: (pAll, valOrPromise, i) =>
     if @_isPromise(valOrPromise)
-      do (pAll) => valOrPromise.then (
-        (value) => @_scheduleResolution(pAll, value, i)),(
-        (reason) => pAll.reject(reason))
+      valOrPromise.then (
+        (value) => @_scheduleResolution(pAll, value, i)),
+        pAll.reject
     else
       pAll.results[i] = valOrPromise
       if --pAll.numLeft == 0

@@ -8,9 +8,7 @@
 
   root = typeof exports !== "undefined" && exports !== null ? exports : this;
 
-  bestTick = (typeof process !== "undefined" && process !== null ? process.nextTick : void 0) || (typeof setImmediate === 'function' && setImmediate) || function(task) {
-    return setTimeout(task, 0);
-  };
+  bestTick = require('./bestTick').bestTick;
 
   Covenant = (function() {
 
@@ -54,10 +52,6 @@
     function PendingState() {
       this.pendeds = [];
     }
-
-    PendingState.prototype.status = function() {
-      return 'pending';
-    };
 
     PendingState.prototype.fulfill = function(value) {
       return new FulfilledState(value, this.pendeds);
@@ -107,13 +101,13 @@
 
     CompletedState.prototype._handleFunction = function(datum, callback, fallback, p2) {
       try {
-        return this._handleCallbackResults.apply(this, arguments);
+        return this._handleFunctionResult.apply(this, arguments);
       } catch (e) {
         return p2.reject(e);
       }
     };
 
-    CompletedState.prototype._handleCallbackResults = function(datum, callback, fallback, p2) {
+    CompletedState.prototype._handleFunctionResult = function(datum, callback, fallback, p2) {
       var result;
       if (this._isPromise(result = callback(datum))) {
         return result.then(p2.fulfill, p2.reject);
@@ -143,10 +137,6 @@
       FulfilledState.__super__.constructor.call(this, pended);
     }
 
-    FulfilledState.prototype.status = function() {
-      return 'fulfilled';
-    };
-
     FulfilledState.prototype._schedule = function(onFulfill, __, p2) {
       var _this = this;
       return bestTick(function() {
@@ -166,10 +156,6 @@
       this.reason = reason;
       RejectedState.__super__.constructor.call(this, pended);
     }
-
-    RejectedState.prototype.status = function() {
-      return 'rejected';
-    };
 
     RejectedState.prototype._schedule = function(__, onReject, p2) {
       var _this = this;

@@ -130,13 +130,9 @@
 
     Promise._scheduleResolution = function(pAll, valOrPromise, i) {
       if (Promise._isPromise(valOrPromise)) {
-        return (function(pAll) {
-          return valOrPromise.then((function(value) {
-            return Promise._scheduleResolution(pAll, value, i);
-          }), (function(reason) {
-            return pAll.reject(reason);
-          }));
-        })(pAll);
+        return valOrPromise.then((function(value) {
+          return Promise._scheduleResolution(pAll, value, i);
+        }), pAll.reject);
       } else {
         pAll.results[i] = valOrPromise;
         if (--pAll.numLeft === 0) {
