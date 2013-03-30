@@ -1,5 +1,5 @@
 should = require 'should'
-Covenant = require('../covenant').Covenant
+{Covenant} = require('../index')
 
 p = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}
@@ -248,3 +248,13 @@ describe "Covenant", ->
           done()
         thenHasReturned = true
 
+  describe "Run covenant against the Promises/A+ Test Suite", ->
+    @slow(500)
+    require('promises-aplus-tests').mocha
+      fulfilled: (value) -> p=new Covenant; p.fulfill(value); p
+      rejected: (reason) -> p=new Covenant; p.reject(reason); p
+      pending: ->
+        p = new Covenant
+        promise: p
+        fulfill: p.fulfill
+        reject: p.reject

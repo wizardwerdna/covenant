@@ -1,8 +1,14 @@
 root = (exports ? this)
-ins = (x) -> require('util').inspect x, false, null, true
+{Covenant} = require './covenant'
 
-class Promise extends require('./covenant').Covenant
+class Promise extends Covenant
   constructor: -> super()
+  # constructors
+  @pending: -> new Promise
+  @fulfilled: (value) -> p=new Promise; p.fulfill(value); p
+  @rejected: (reason) -> p=new Promise; p.reject(reason); p
+  
+  # wrappers
   @fromNode: (f)->
     (args...) ->
       p = new Promise
@@ -10,9 +16,17 @@ class Promise extends require('./covenant').Covenant
         if err then p.reject(err) else p.fulfill(value)
       f(args...)
       p
-  @pending: -> new Promise
-  @fulfilled: (value) -> p=new Promise; p.fulfill(value); p
-  @rejected: (reason) -> p=new Promise; p.reject(reason); p
+  
+  # temporal promises
+  @delay: (ms)->
+    p = new Promise
+    setTimeout (->p.fulfill()), ms
+    p
+  @timeout: (ms, p) ->
+    setTimeout (->p.reject new Error "timeout after #{ms} milliseconds"), ms
+    p
+  
+  # aggregate promises
   @all: @when
   @when: (promises...) ->
     pAll = @pending()
@@ -24,6 +38,13 @@ class Promise extends require('./covenant').Covenant
       for p, i in promises
         do(p, i) => @_scheduleResolution(pAll,p,i)
     pAll
+  
+  # convenience instance functions
+  done: (onFulfill) -> @then onFulfill
+  fail: (onReject) -> @then null, onReject
+  always: (callback) -> @then callback, callback
+  
+    
   @_scheduleResolution: (pAll, valOrPromise, i) =>
     if @_isPromise(valOrPromise)
       do (pAll) => valOrPromise.then (
@@ -34,7 +55,5 @@ class Promise extends require('./covenant').Covenant
       if --pAll.numLeft == 0
         pAll.fulfill(pAll.results)
   @_isPromise: (p) -> typeof p?.then == 'function'
-  done: (onFulfill) -> @then onFulfill
-  fail: (onReject) -> @then null, onReject
-  always: (callback) -> @then callback, callback
+
 root.Promise = Promise

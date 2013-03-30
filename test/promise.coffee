@@ -1,5 +1,5 @@
 should = require 'should'
-Promise = require('../promise').Promise
+{Promise} = require('../index')
 
 p = p1 = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}
@@ -10,8 +10,7 @@ dummyReason = new Error 'dummyReason'
 dummyReason2 = new Error 'dummyReason2'
 
 describe "Promise", ->
-  beforeEach ->
-    p = new Promise
+  beforeEach -> p = new Promise
 
   describe "state transitions", ->
     it "should default to a pending state", ->
@@ -335,3 +334,64 @@ describe "Promise", ->
         p.state.status().should.eql 'rejected'
         p.state.reason.should.eql dummyReason
         done()), 20
+
+  describe "Promise.fromNode", ->
+    describe "when passed a function f", ->
+      it "should return a function", ->
+        Promise.fromNode((cb)->).should.be.a 'function'
+      it "if f is n-adic, should return an n-1-adic function that returns a promise", ->
+        Promise.fromNode((cb)->)()?.then.should.be.a 'function'
+        (Promise.fromNode((a,b,c,d)->)(1,2,3))?.then.should.be.a 'function'
+      it "should be pending until f calls its callback", (done)->
+        setTimeout (->
+          Promise.fromNode((cb)->)().state.status().should.eql 'pending'
+          done()), 20
+      it "should fulfill with value if f's cb(false, value)", (done) ->
+        setTimeout (->
+          Promise.fromNode((cb)->cb(false, dummy1))().state.value.should.eql dummy1
+          done()), 20
+      it "should reject with err if f's cb(err, value) has truthy err", (done) ->
+        setTimeout (->
+          Promise.fromNode((cb)->cb(dummyReason, dummy1))().state.reason.should.eql dummyReason
+          done()), 20
+
+  describe "Promise.delay(ms)", ->
+    it "should return a promise", ->
+      Promise.delay(20)?.then.should.be.a 'function'
+    it "should be pending until ms milliseconds have passed", (done)->
+      p = Promise.delay(20)
+      setTimeout (->
+        p.state.status().should.eql 'pending'
+        done()), 17
+    it "should be fulfilled after ms milliseconds have passed", (done)->
+      p = Promise.delay(20)
+      setTimeout (->
+        p.state.status().should.eql 'fulfilled'
+        done()), 23
+
+  describe "Promise.timeout(ms, p)", ->
+    beforeEach ->
+      p = new Promise
+      p2 = Promise.timeout(20, p)
+    it "should return a promise p2", ->
+      p2?.then.should.be.a 'function'
+    it "if p not resolved, p2 remains pending until ms milliseconds have passed", (done)->
+      setTimeout (->
+        p2.state.status().should.eql 'pending'
+        done()), 17
+    it "if p not resolved beforehand, p2 should be rejected after ms milliseconds have passed", (done)->
+      p = Promise.delay(20)
+      setTimeout (->
+        p2.state.reason.should.eql new Error "timeout after 20 milliseconds"
+        done()), 25
+    it "if p fulfilled before ms milliseconds, it remains so resolved afterward", (done)->
+      p.fulfill(dummy1)
+      setTimeout (->
+        p2.state.value.should.eql dummy1
+        done()), 25
+    it "if p rejected before ms milliseconds, it remains so resolved afterward", (done) ->
+      p.reject(dummyReason)
+      setTimeout (->
+        p2.state.reason.should.eql dummyReason
+        done()), 25
+
