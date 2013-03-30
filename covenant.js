@@ -16,6 +16,9 @@
 
     function Covenant() {
       var _this = this;
+      this.then = function(onFulfill, onReject) {
+        return Covenant.prototype.then.apply(_this, arguments);
+      };
       this.reject = function(reason) {
         return Covenant.prototype.reject.apply(_this, arguments);
       };
@@ -98,7 +101,7 @@
       if (this._isFunction(callback)) {
         return this._handleFunction.apply(this, arguments);
       } else {
-        return fallback.call(p2, datum);
+        return fallback(datum);
       }
     };
 

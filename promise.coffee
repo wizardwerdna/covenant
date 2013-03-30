@@ -27,7 +27,7 @@ class Promise extends Covenant
     p
   
   # aggregate promises
-  @all: @when
+  @all: Promise.when
   @when: (promises...) ->
     pAll = @pending()
     pAll.results = new Array promises.length
@@ -43,7 +43,17 @@ class Promise extends Covenant
   done: (onFulfill) -> @then onFulfill
   fail: (onReject) -> @then null, onReject
   always: (callback) -> @then callback, callback
-  
+
+  # restricted instances
+  resolver: =>
+    reject: @reject
+    fulfill: @fulfill
+
+  thenable: =>
+    then: @then
+    done: @done
+    fail: @fail
+    always: @always
     
   @_scheduleResolution: (pAll, valOrPromise, i) =>
     if @_isPromise(valOrPromise)
@@ -54,6 +64,7 @@ class Promise extends Covenant
       pAll.results[i] = valOrPromise
       if --pAll.numLeft == 0
         pAll.fulfill(pAll.results)
+
   @_isPromise: (p) -> typeof p?.then == 'function'
 
 root.Promise = Promise

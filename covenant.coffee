@@ -9,7 +9,7 @@ class Covenant
     @state = new PendingState
   fulfill: (value) => @state = @state.fulfill(value)
   reject: (reason) => @state = @state.reject(reason)
-  then: (onFulfill, onReject) ->
+  then: (onFulfill, onReject) =>
     p2 = new @constructor
     @state._schedule(onFulfill, onReject, p2)
     p2
@@ -33,7 +33,7 @@ class CompletedState
     if @_isFunction callback
       @_handleFunction arguments...
     else
-      fallback.call p2, datum
+      fallback(datum)
   _handleFunction: (datum, callback, fallback, p2) ->
     try
       @_handleCallbackResults arguments...

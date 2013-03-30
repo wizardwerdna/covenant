@@ -1,8 +1,10 @@
 should = require 'should'
 {Covenant} = require('../index')
 
+# test scaffolding
 p = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}
+dummy1 = {dummy: 'dummy1'}
 dummy2 = {dummy2: 'dummy2'}
 dummyReason = new Error 'dummyReason'
 
@@ -247,6 +249,30 @@ describe "Covenant", ->
           thenHasReturned.should.be.true
           done()
         thenHasReturned = true
+
+  describe "p.fulfill", ->
+    it "should be bound to p", ->
+      p = new Covenant
+      f = p.fulfill
+      f(dummy)
+      p.state.value.should.eql dummy
+
+  describe "p.reject should be bound to p", ->
+    it "should be bound to p", ->
+      p = new Covenant
+      f = p.reject
+      f(dummyReason)
+      p.state.reason.should.eql dummyReason
+
+  describe "p.then should be bound to p", ->
+    it "should be bound to p", (done)->
+      p = new Covenant
+      f = p.then
+      callback = (value) ->
+        value.should.eql dummy
+        done()
+      f(callback)
+      p.fulfill(dummy)
 
   describe "Run covenant against the Promises/A+ Test Suite", ->
     @slow(500)

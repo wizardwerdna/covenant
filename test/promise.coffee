@@ -395,3 +395,22 @@ describe "Promise", ->
         p2.state.reason.should.eql dummyReason
         done()), 25
 
+  describe "p.thenable()", ->
+    beforeEach -> p2 = p.thenable()
+    it "should have an identical then operation", ->
+      p2.then.should.equal p.then
+    it "should mirror convenience functions", ->
+      p2.done.should.equal p.done
+      p2.fail.should.equal p.fail
+      p2.always.should.equal p.always
+    it "should not have resolution functions", ->
+      should.not.exist p2.fulfill
+      should.not.exist p2.reject
+
+  describe "p.resolver()", ->
+    beforeEach -> p2 = p.resolver()
+    it "should have identical resolution functions", ->
+      p2.fulfill.should.equal p.fulfill
+      p.reject.should.equal p.reject
+    it "should not have then or convenience functionality", ->
+      should.not.exist p2.then
