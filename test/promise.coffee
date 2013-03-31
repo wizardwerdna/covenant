@@ -1,5 +1,6 @@
 should = require 'should'
 {Promise} = require('../promise')
+{bestTick} = require('../bestTick')
 
 # test scaffold
 p = p1 = p2 = p3 = returnPromise = callback = null
@@ -54,7 +55,7 @@ describe "Promise", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.done(nonFunction) returns p2 fulfilled with value", (done)->
       p2 = p.done(undefined)
-      setImmediate ->
+      bestTick ->
         p2.state.value.should.eql dummy
         done()
     describe ", p2=p.done(function)", ->
@@ -63,13 +64,13 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.done ->dummy2
-          setImmediate ->
+          bestTick ->
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.done ->throw dummyReason
-          setImmediate ->
+          bestTick ->
             p2.state.reason.should.eql dummyReason
             done()
       describe ", and function returns a promise", ->
@@ -95,7 +96,7 @@ describe "Promise", ->
     beforeEach -> p.reject(dummy)
     it ", p2=p.fail(nonFunction) returns p2 rejected with reason", (done)->
       p2 = p.fail(undefined)
-      setImmediate ->
+      bestTick ->
         p2.state.reason.should.eql dummy
         done()
     describe ", p2=p.fail(function)", ->
@@ -104,13 +105,13 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.fail -> dummy2
-          setImmediate ->
+          bestTick ->
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.fail ->throw dummyReason
-          setImmediate ->
+          bestTick ->
             p2.state.reason.should.eql dummyReason
             done()
       describe ", and function returns a promise", ->
@@ -136,7 +137,7 @@ describe "Promise", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.always(nonFunction) returns p2 fulfilled with value", (always)->
       p2 = p.always(undefined)
-      setImmediate ->
+      bestTick ->
         p2.state.value.should.eql dummy
         always()
     describe ", p2=p.always(function)", ->
@@ -145,13 +146,13 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (always)->
           p2 = p.always ->dummy2
-          setImmediate ->
+          bestTick ->
             p2.state.value.should.eql dummy2
             always()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (always)->
           p2 = p.always ->throw dummyReason
-          setImmediate ->
+          bestTick ->
             p2.state.reason.should.eql dummyReason
             always()
       describe ", and function returns a promise", ->
@@ -177,7 +178,7 @@ describe "Promise", ->
     beforeEach -> p.reject(dummy)
     it ", p2=p.always(nonFunction) returns p2 rejected with reason", (always)->
       p2 = p.always(undefined)
-      setImmediate ->
+      bestTick ->
         p2.state.reason.should.eql dummy
         always()
     describe ", p2=p.always(function)", ->
@@ -186,13 +187,13 @@ describe "Promise", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (always)->
           p2 = p.always -> dummy2
-          setImmediate ->
+          bestTick ->
             p2.state.value.should.eql dummy2
             always()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (always)->
           p2 = p.always ->throw dummyReason
-          setImmediate ->
+          bestTick ->
             p2.state.reason.should.eql dummyReason
             always()
       describe ", and function returns a promise", ->
@@ -378,7 +379,6 @@ describe "Promise", ->
         done()), 25
     it "if p fulfilled before ms milliseconds, it remains so resolved afterward", (done)->
       p.fulfill(dummy1)
-      console.log p
       setTimeout (->
         p2.state.value.should.eql dummy1
         done()), 25

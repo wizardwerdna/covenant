@@ -6,8 +6,9 @@
   "scripts": {
     "test": "node_modules/.bin/mocha -G -R nyan --compilers :coffee-script test/*.coffee",
     "build": "npm run-script buildPromise",
-    "buildPromise": "coffee -j index.coffee -cm bestTick.coffee covenant.coffee promise.coffee",
-    "buildCovenant": "coffee -j index.coffee -cm bestTick.coffee covenant.coffee"
+    "buildPromise": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee promise.coffee",
+    "buildCovenant": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee",
+    "uglifyjs": "node_modules/.bin/uglifyjs index.js > index.js.min"
   },
   "repository": {
     "type": "git",
@@ -21,7 +22,8 @@
     "mocha": "~1.8.2",
     "promises-aplus-tests": "promises-aplus/promises-tests",
     "coffee-script": "~1.6.1",
-    "jslint": "~0.1.9"
+    "jslint": "~0.1.9",
+    "uglify-js": "~2.2.5"
   },
   "keywords": [
     "promise",

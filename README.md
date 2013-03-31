@@ -4,45 +4,59 @@
 
 # Covenant 
 
-Covenant is a 64-line [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  It compiles to under 200 lines of javascript, less than 500 bytes without compression.  
-
+Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  Covenant is extremely performant and lightweight, its three-function core being 52 lines of Coffeesript, compiling to 170 lines of javascript that minimizes to just 960 bytes uglified and compressed.  Promise, more full-featured extension of Covenant is included, weighing in at an additional 62 lines of Coffeescript. Altogether with the Core, Promise compiles to 324 lines and 1.6K bytes uglified and compressed.  
  
+## The Covenant (Core) API
+
+```coffeescript
+{Covenant} = require('covenant')
+
+# create a new promise
+p = new Covenant
+
+# fulfill it with a value
+p.fulfill(value)
+
+# reject it, with a reason (such as an Error object)
+p.reject(reason)
+
+# schedule asynchronous handlers, as often as you like, before or after resolution
+# the handler may be a value, a function or a promise (an object having a function
+# property named "then."
+covenant.then onFulfilled, onRejected
+```
+
+## Discussion
+
+A promise represents a `value`, that may exist now or in the future, or the `reason` why a value could not be computed.  At any point in time, a promise will be either: (i) `pending` resolution; (ii) `fulfilled` with a `value`; or (iii) `rejected` with a `reason`.  A pending object can be resolved  with the `p.fulfill` and `p.reject` functions.  Once resolved, any further call to either function is ignored. Resolution is not guaranteed, and a promise can remaining forever pending. 
+
+A program performing an asynchronous computation may deliver its result by creating apromise and returning it to the client.  The program then manages its state by fulfilling it with a value or rejecting it with a reason as may be required.  For example, a promise for delivery of file contents might be built as follows:
+
+```coffeescript
+createReadFilePromise = (filename, encoding='utf8') ->
+  p = new Covenant
+  fs.readFile filename, encoding, (err, value) ->
+    if err
+      p.reject(err) 
+    else
+      p.fulfill(value)
+  p
+```
+
+This pattern is common for node-style callback functions.  Once the promise is built, a client receiving the promise can query it by registering resolution handlers.  The client may register as many handlers as the programmer likes, both before and after resolution. For example,
+
+```coffeescript
+createReadFilePromise('filename.txt').
+  then console.log, console.error
+```
+
+which will log the result value to stdout upon fulfillment, or writes the error to stderr upon rejection.
+
 ## Installation 
 
 Download it, clone it, or `npm install wizardwerdna/covenant`
 
 Covenant has no dependencies, but does use process.nextTick, found in modern Browsers.  If process.nextTick is not a function, Covenant falls back to setImmediate, and then to setTimeout.  If you are using ancient browsers, it is highly recommended that you use a shim to implement (fake) nextTick and/or setImmediate.
-
-## The API
-
-```javascript
-// load the coffeescript compiler (unless running precompiled version)
-// and then follow up with obvious variations of the coffeescript below
-require('coffee-script');
-```
-
-```bash
-# alternatively, simply transpile a direct javascript file and use that
-# instead
-coffee -c node_modules/covenant/covenant.coffee
-```
-
-```coffeescript
-# get the Promise class
-Covenant = require('covenant').Covenant
-
-# create a new pending promise
-covenant = new Covenant
-
-# fulfill it
-covenant.fulfill(value)
-
-# reject it
-covenant.reject(reason)
-
-# schedule asynchronous handers
-covenant.then onFulfilled, onRejected
-```
 
 ## Why another promise implementation?
 
