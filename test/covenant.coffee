@@ -195,9 +195,9 @@ describe "Covenant", ->
       describe ", after returnPromise.reject(reason)", ->
         beforeEach -> returnPromise.reject(dummyReason)
         it ", p2 should be rejected for the reason", (done)->
-          bestTick ->
+          setTimeout (->
             p2.state.reason.should.eql dummyReason
-            done()
+            done()), 20
     describe ", p is rejected", ->
       beforeEach -> p.reject(dummyReason)
       it "p2 should be a pending promise", (done)->
@@ -213,9 +213,9 @@ describe "Covenant", ->
       describe ", after returnPromise.reject(reason)", ->
         beforeEach -> returnPromise.reject(dummyReason)
         it ", p2 should be rejected for the reason", (done)->
-          bestTick ->
+          setTimeout (->
             p2.state.reason.should.eql dummyReason
-            done()
+            done()), 20
           
   describe "per spec, then must return before", ->
     describe "an onFulfill callback is executed", ->
@@ -264,6 +264,21 @@ describe "Covenant", ->
         done()
       f(callback)
       p.fulfill(dummy)
+  
+  describe "torture test using reduce (exposed a recursive nextTick)", ->
+    it "should add the first numberOfIterations integers", (done)->
+      numberOfIterations = 10000
+      (initialPromise = (new Covenant)).fulfill(0)
+      p = [1..numberOfIterations].reduce ((promise, nextVal)->
+        promise.then (currentVal) ->
+          d = new Covenant
+          d.fulfill(currentVal + nextVal)
+          d
+      ), initialPromise
+      setTimeout (->
+        p.then (value)->
+          value.should.eql (iter*(iter+1))/2
+        done()), 20
 
   describe "Run covenant against the Promises/A+ Test Suite", ->
     @slow(500)

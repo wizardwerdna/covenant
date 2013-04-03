@@ -1,5 +1,5 @@
 root = (exports ? this)
-{bestTick} = require './bestTick'
+{bestTick, secondBestTick} = require './bestTick'
 
 class Covenant
   constructor: -> @state = new PendingState
@@ -35,7 +35,7 @@ class CompletedState
       p2.reject e
   _handleFunctionResult: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      result.then p2.fulfill, p2.reject
+      secondBestTick => result.then p2.fulfill, p2.reject
     else
       p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
