@@ -1,5 +1,29 @@
 root = (exports ? this)
 {Covenant} = require './covenant'
+{Transform} = require 'stream'
+
+class PromiseStream extends Transform
+  constructor: (@promise, @options={passthrough: "false"}) ->
+    @chunks = null
+    super()
+    @on('error', @promise.reject)
+    @resume() unless @options.passthrough
+    @
+  _transform: (chunk, encoding, callback) ->
+    @_collect(chunk, encoding, callback)
+    callback(null, chunk) if @options.passthrough
+  end: ->
+    @promise.fulfill(@_joinCollection)
+    super()
+  _collect: (chunk, encoding, callback) ->
+    if @chunks
+      @chunks += chunk
+    else
+      @chunks = chunk
+  _joinCollection: ->
+    @chunks
+
+root.PromiseStream = PromiseStream
 
 class Promise extends Covenant
   constructor: -> super()
@@ -11,12 +35,14 @@ class Promise extends Covenant
   @fromNode: (f)=>
     (args...) => @makePromise (p)->
       f(args..., p._nodeResolver)
-  @delay: (ms)=> @makePromise (p)-> setTimeout(p.fulfill, ms)
+  @delay: (ms)=> @makePromise (p)-> 
+    setTimeout(p.fulfill, ms)
+    p.always -> clearTimeout(t)
   @timeout: (ms, p) => @makePromise (p2)->
-    p.then p2.fulfill, p2.reject
     err = new Error "timeout after #{ms} milliseconds"
-    setTimeout (-> p.reject err), ms
-  
+    t = setTimeout (-> p.reject err), ms
+    p.then p2.fulfill, p2.reject
+    p.always -> clearTimeout(t)
   # aggregate promises
   @when: (promises...) => @makePromise (pAll)=>
     pAll.results = new Array promises.length
@@ -32,6 +58,9 @@ class Promise extends Covenant
   done: (onFulfill) -> @then onFulfill
   fail: (onReject) -> @then null, onReject
   always: (callback) -> @then callback, callback
+
+  # node stream interface
+  stream: (options) => new PromiseStream @, options
 
   # restricted instances
   resolver: =>
@@ -58,4 +87,10 @@ class Promise extends Covenant
 
   _nodeResolver: (err, value) =>
     if err then @reject(err) else @fulfill(value)
+  _httpResolver: (res) =>
+    if res.statusCode == 201
+      res.pipe(@stream())
+    else
+      @reject new Error "HTTP status code #{res.statusCode}"
+
 root.Promise = Promise

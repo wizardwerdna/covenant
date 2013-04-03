@@ -32,7 +32,7 @@ describe "Covenant", ->
     it "should remain fulfilled, even if subsequently rejected", ->
       p.fulfill()
       p.reject()
-      testFulfilled(p) 
+      testFulfilled(p)
     it "should remain rejected, even if subsequently fulfilled", ->
       p.reject()
       p.fulfill()

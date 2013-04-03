@@ -4,7 +4,8 @@
 
 # Covenant 
 
-Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  Covenant is extremely performant and lightweight, its three-function core being 52 lines of Coffeesript, compiling to 170 lines of javascript that minimizes to just 960 bytes uglified and compressed.  Promise, more full-featured extension of Covenant is included, weighing in at an additional 62 lines of Coffeescript. Altogether with the Core, Promise compiles to 324 lines and 1.6K bytes uglified and compressed.  
+Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  Covenant is performant and extremely lightweight, its three-function core being 52 lines of Coffeesript, compiling to 170 lines of javascript that minimizes to just 960 bytes uglified and compressed.  The elegant three-function API (counting the constructor) provides enough functionality to satisfy the Promises/A+ specificationand provide the core for a full-featured promise implementation, which is also providede
+
  
 ## The Covenant (Core) API
 
@@ -26,31 +27,95 @@ p.reject(reason)
 covenant.then onFulfilled, onRejected
 ```
 
-## Discussion
+## The Promise (Extended) API
 
-A promise represents a `value`, that may exist now or in the future, or the `reason` why a value could not be computed.  At any point in time, a promise will be either: (i) `pending` resolution; (ii) `fulfilled` with a `value`; or (iii) `rejected` with a `reason`.  A pending object can be resolved  with the `p.fulfill` and `p.reject` functions.  Once resolved, any further call to either function is ignored. Resolution is not guaranteed, and a promise can remaining forever pending. 
-
-A program performing an asynchronous computation may deliver its result by creating apromise and returning it to the client.  The program then manages its state by fulfilling it with a value or rejecting it with a reason as may be required.  For example, a promise for delivery of file contents might be built as follows:
-
-```coffeescript
-createReadFilePromise = (filename, encoding='utf8') ->
-  p = new Covenant
-  fs.readFile filename, encoding, (err, value) ->
-    if err
-      p.reject(err) 
-    else
-      p.fulfill(value)
-  p
-```
-
-This pattern is common for node-style callback functions.  Once the promise is built, a client receiving the promise can query it by registering resolution handlers.  The client may register as many handlers as the programmer likes, both before and after resolution. For example,
+Promise, more full-featured extension of Covenant is included.  It weighs in at an additional 62 lines of Coffeescript. Altogether with the Core, Promise compiles to 324 lines and 1.6K bytes uglified and compressed.  It provides: a nice collection of promise-generating, an aggregation function, some convenience functions and functions for securely sharing promise objects with clients for limited use.
+  
+### Promise Generaton Functions
 
 ```coffeescript
-createReadFilePromise('filename.txt').
-  then console.log, console.error
+{Promise} = require ('covenant')
+
+# Promise.makePromise(f): new up a promise p, apply f(p) and return p
+Promise.makePromise f
+
+# Promise.pending(): construct a pending promise
+p = Promise.pending()
+  .anything(console.log) # => nothing yet!
+  .fulfill("I'm all done") # => I'm all done"
+
+# Promise.fulfilled(value): construct a promise fulfilled with value
+Promise.fulfilled(42)
+  .done(console.log) # => 43
+
+# Promise.rejected(reason): construct a promise rejected for reason
+Promise.rejected("naughty you")
+  .fail(console.error) # => "naughty you"
+
+# Promise.fromNode(nodeOperation): construct a promise generating function based on node functions
+f = Promise.fromNode(fs.readFile)
+pReadFile = f('foo.data')
+
+# construct a promise that fulfills after ms milliseconds
+Promise.delay(100)
+
+# construct a promise that rejects for timeout unless resolved before ms milliseconds.
+Promise.timeout(p, 100)
 ```
 
-which will log the result value to stdout upon fulfillment, or writes the error to stderr upon rejection.
+### Aggregate Promise Functions
+```coffeescript
+# Promise.when(promiseOrValueList): Construct a promise from any number of values or promises, which fulfills with an
+# array of corresponding values if all promises are fulfilled, and rejects if ANY
+
+# example when promise is rejected
+# with raw values
+Promise.when(1, 2, 3)
+  .done console.log # => [1, 2, 3]
+
+# with pending promises, ultimately fulfilled
+p = Promise.pending()
+q = Promise.when p, 2, Promise.fulfilled(3)
+q.done console.log # => nothing happens
+p.fulfill(1) # => [1,2,3] after a tick or two
+
+# with pending promises, one rejectedl
+Promise.when(Promise.pending(), Promise.fulfilled(2), Promise.rejected("Error in 3")
+  .fail(console.error) # => Error in 3
+p = (Promise.when p1, p2, p3).fail(console.error) # => Error in 3
+
+# Promise.all(valueOrPromiseList): same as Promise.all Promise.when 
+```
+
+### Promise Instance Convenience Functions
+```coffeescript
+# p.done(callback): convenience function for p.then onFulfill, undefined
+p.done(onFulfill)
+
+# p.fail(callback): convenience function for p.then undefined, onReject
+p.fail(onReject)
+
+# p.always(callback): convenience function for p.then callback, callback
+p.always(callback)
+
+# Note that the promise returned by p.always(callback) can resolve
+# differently, even when p has already resolved.
+```
+
+### Protected Promise Instance Functions
+```coffeescript
+# p.resolver(): generates an object that can only call 
+# reject and fulfill, operating on p
+p.resolver().fulfill(10) # resolves p with value 10
+p.then # => message does not exist 
+
+# p.thenable(): generates an object linked to p that responds 
+# to then and convenience functions, but does not permit a client to
+# resolve p. 
+p.thenable().then console.log
+p.fulfill('hello, world!') # => 'hello, world!'
+p.thenable().fulfill(1) # => message does not exist 
+```
 
 ## Installation 
 

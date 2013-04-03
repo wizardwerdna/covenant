@@ -35,7 +35,7 @@ class CompletedState
       p2.reject e
   _handleFunctionResult: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      secondBestTick => result.then p2.fulfill, p2.reject
+      setImmediate => result.then p2.fulfill, p2.reject
     else
       p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
