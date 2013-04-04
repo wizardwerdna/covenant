@@ -1,6 +1,5 @@
 should = require 'should'
-{Covenant} = require('../covenant')
-{bestTick} = require('../bestTick')
+{Covenant, bestTick} = require('../covenant')
 
 # test scaffolding
 p = p2 = p3 = returnPromise = callback = null

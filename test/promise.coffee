@@ -1,6 +1,5 @@
 should = require 'should'
-{Promise} = require('../promise')
-{bestTick} = require('../bestTick')
+{Promise, bestTick} = require('../promise')
 
 # test scaffold
 p = p1 = p2 = p3 = returnPromise = callback = null

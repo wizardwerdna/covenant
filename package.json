@@ -16,14 +16,17 @@
   },
   "author": "Andrew C. Greenberg (wizardwerdna@gmail.com)",
   "license": "BSD",
-  "dependencies": {},
+  "dependencies": {
+  },
   "devDependencies": {
     "should": "~1.2.2",
     "mocha": "~1.8.2",
     "promises-aplus-tests": "promises-aplus/promises-tests",
     "coffee-script": "~1.6.1",
     "jslint": "~0.1.9",
-    "uglify-js": "~2.2.5"
+    "uglify-js": "~2.2.5",
+    "coffeeify": "~0.3.0",
+    "browserify": "~2.11.0"
   },
   "keywords": [
     "promise",

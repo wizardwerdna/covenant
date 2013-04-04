@@ -1,5 +1,6 @@
 root = (exports ? this)
-{Covenant} = require './covenant'
+{bestTick, bestImmediate, Covenant} = require './covenant'
+root.bestTick = bestTick
 {Transform} = require 'stream'
 
 class PromiseStream extends Transform

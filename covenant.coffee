@@ -1,5 +1,9 @@
 root = (exports ? this)
-{bestTick, secondBestTick} = require './bestTick'
+
+root.bestImmediate = bestImmediate =
+  (typeof setImmediate == 'function' && setImmediate) or
+  (task) -> setTimeout(task, 0)
+root.bestTick = bestTick = (process?.nextTick) or root.bestImmediate
 
 class Covenant
   constructor: -> @state = new PendingState
@@ -35,7 +39,7 @@ class CompletedState
       p2.reject e
   _handleFunctionResult: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      setImmediate => result.then p2.fulfill, p2.reject
+      bestImmediate => result.then p2.fulfill, p2.reject
     else
       p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
