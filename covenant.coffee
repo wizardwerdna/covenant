@@ -1,9 +1,9 @@
 root = (exports ? this)
 
-root.bestImmediate = bestImmediate =
+root.enqueue = enqueue =
   (typeof setImmediate == 'function' && setImmediate) or
+  (process?.nextTick) or
   (task) -> setTimeout(task, 0)
-root.bestTick = bestTick = (process?.nextTick) or root.bestImmediate
 
 class Covenant
   constructor: -> @state = new PendingState
@@ -39,7 +39,7 @@ class CompletedState
       p2.reject e
   _handleFunctionResult: (datum, callback, fallback, p2) ->
     if @_isPromise result=callback(datum)
-      bestImmediate => result.then p2.fulfill, p2.reject
+      result.then p2.fulfill, p2.reject
     else
       p2.fulfill result
   _isFunction: (thing)-> typeof thing is 'function'
@@ -48,9 +48,9 @@ class CompletedState
 class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
   _schedule: (onFulfill, __, p2) ->
-    bestTick => @_do @value, onFulfill, p2.fulfill, p2
+    enqueue => @_do @value, onFulfill, p2.fulfill, p2
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
   _schedule: (__, onReject, p2) ->
-    bestTick => @_do @reason, onReject, p2.reject, p2
+    enqueue => @_do @reason, onReject, p2.reject, p2
