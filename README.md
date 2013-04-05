@@ -4,7 +4,7 @@
 
 # Covenant 
 
-Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests).  Covenant is performant and extremely lightweight, its three-function core being 52 lines of Coffeesript, compiling to 170 lines of javascript that minimizes to just 960 bytes uglified and compressed.  The elegant three-function API (counting the constructor) provides enough functionality to satisfy the Promises/A+ specificationand provide the core for a full-featured promise implementation, which is also providede
+Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests), as well as the present draft of version 1.1 of the test suite.  Covenant is very performant and extremely lightweight, its three-function core being 52 lines of Coffeesript, compiling to 170 lines of javascript that minimizes to just 960 bytes uglified and compressed.  The elegant three-function API (counting the constructor) provides enough functionality to satisfy the Promises/A+ specificationand provide the core for a full-featured promise implementation, which is also providede
 
  
 ## The Covenant (Core) API
@@ -20,6 +20,11 @@ p.fulfill(value)
 
 # reject it, with a reason (such as an Error object)
 p.reject(reason)
+
+# Wrap another promise or foreign "thennable" and adopt its state.
+# Otherwise, fulfill with the value or reject if unable to adopt.
+# Works with Promise/A+-conforming and many non-conforming promises.
+p.resolve(promiseThennableOrValue)
 
 # schedule asynchronous handlers, as often as you like, before or after resolution
 # the handler may be a value, a function or a promise (an object having a function

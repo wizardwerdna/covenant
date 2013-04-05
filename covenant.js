@@ -16,6 +16,12 @@
 
     function Covenant() {
       var _this = this;
+      this._resolveNonCovenantValue = function(value) {
+        return Covenant.prototype._resolveNonCovenantValue.apply(_this, arguments);
+      };
+      this.resolve = function(value) {
+        return Covenant.prototype.resolve.apply(_this, arguments);
+      };
       this.then = function(onFulfill, onReject) {
         return Covenant.prototype.then.apply(_this, arguments);
       };
@@ -41,6 +47,28 @@
       p2 = new this.constructor;
       this.state._schedule(onFulfill, onReject, p2);
       return p2;
+    };
+
+    Covenant.prototype.resolve = function(value) {
+      if (value instanceof Covenant) {
+        return value.then(this.fulfill, this.reject);
+      } else {
+        return this._resolveNonCovenantValue(value);
+      }
+    };
+
+    Covenant.prototype._resolveNonCovenantValue = function(value) {
+      var valueThen;
+      try {
+        valueThen = value != null ? value.then : void 0;
+        if (typeof valueThen === 'function') {
+          return valueThen(this.resolve, this.reject);
+        } else {
+          return this.fulfill(value);
+        }
+      } catch (e) {
+        return this.reject(e);
+      }
     };
 
     return Covenant;
@@ -93,37 +121,16 @@
       return this;
     };
 
-    CompletedState.prototype._do = function(datum, callback, fallback, p2) {
-      if (this._isFunction(callback)) {
-        return this._handleFunction.apply(this, arguments);
-      } else {
-        return fallback(datum);
-      }
-    };
-
-    CompletedState.prototype._handleFunction = function(datum, callback, fallback, p2) {
+    CompletedState.prototype._runCallback = function(datum, callback, fallback, p2) {
       try {
-        return this._handleFunctionResult.apply(this, arguments);
+        if (typeof callback === 'function') {
+          return p2.resolve(callback(datum));
+        } else {
+          return fallback(datum);
+        }
       } catch (e) {
         return p2.reject(e);
       }
-    };
-
-    CompletedState.prototype._handleFunctionResult = function(datum, callback, fallback, p2) {
-      var result;
-      if (this._isPromise(result = callback(datum))) {
-        return result.then(p2.fulfill, p2.reject);
-      } else {
-        return p2.fulfill(result);
-      }
-    };
-
-    CompletedState.prototype._isFunction = function(thing) {
-      return typeof thing === 'function';
-    };
-
-    CompletedState.prototype._isPromise = function(thing) {
-      return this._isFunction(thing != null ? thing.then : void 0);
     };
 
     return CompletedState;
@@ -142,7 +149,7 @@
     FulfilledState.prototype._schedule = function(onFulfill, __, p2) {
       var _this = this;
       return enqueue(function() {
-        return _this._do(_this.value, onFulfill, p2.fulfill, p2);
+        return _this._runCallback(_this.value, onFulfill, p2.fulfill, p2);
       });
     };
 
@@ -162,7 +169,7 @@
     RejectedState.prototype._schedule = function(__, onReject, p2) {
       var _this = this;
       return enqueue(function() {
-        return _this._do(_this.reason, onReject, p2.reject, p2);
+        return _this._runCallback(_this.reason, onReject, p2.reject, p2);
       });
     };
 

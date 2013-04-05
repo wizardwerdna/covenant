@@ -13,6 +13,21 @@ class Covenant
     p2 = new @constructor
     @state._schedule(onFulfill, onReject, p2)
     p2
+  resolve: (value) =>
+    if value instanceof Covenant
+      value.then @fulfill, @reject
+    else
+      @_resolveNonCovenantValue value
+  _resolveNonCovenantValue: (value) =>
+    try
+      valueThen = value?.then
+      if typeof valueThen is 'function'
+        valueThen @resolve, @reject
+      else
+        @fulfill value
+    catch e
+      @reject e
+
 root.Covenant = Covenant
 
 class PendingState
@@ -27,30 +42,21 @@ class CompletedState
       do(pended) => @_schedule(pended...)
   fulfill: -> @
   reject: -> @
-  _do: (datum, callback, fallback, p2) ->
-    if @_isFunction callback
-      @_handleFunction arguments...
-    else
-      fallback(datum)
-  _handleFunction: (datum, callback, fallback, p2) ->
+  _runCallback: (datum, callback, fallback, p2) ->
     try
-      @_handleFunctionResult arguments...
+      if typeof callback is 'function'
+        p2.resolve callback(datum)
+      else
+        fallback(datum)
     catch e
       p2.reject e
-  _handleFunctionResult: (datum, callback, fallback, p2) ->
-    if @_isPromise result=callback(datum)
-      result.then p2.fulfill, p2.reject
-    else
-      p2.fulfill result
-  _isFunction: (thing)-> typeof thing is 'function'
-  _isPromise: (thing)-> @_isFunction thing?.then
 
 class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
   _schedule: (onFulfill, __, p2) ->
-    enqueue => @_do @value, onFulfill, p2.fulfill, p2
+    enqueue => @_runCallback @value, onFulfill, p2.fulfill, p2
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
   _schedule: (__, onReject, p2) ->
-    enqueue => @_do @reason, onReject, p2.reject, p2
+    enqueue => @_runCallback @reason, onReject, p2.reject, p2
