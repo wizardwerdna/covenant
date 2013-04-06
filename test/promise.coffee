@@ -1,6 +1,8 @@
-should = require 'should'
+should = require('chai').Should()
+
 {Promise} = require('../promise')
 {enqueue} = require('../covenant')
+
 # test scaffold
 p = p1 = p2 = p3 = returnPromise = callback = null
 dummy = {dummy: 'dummy'}

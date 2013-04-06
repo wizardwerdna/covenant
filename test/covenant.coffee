@@ -1,4 +1,5 @@
-should = require 'should'
+should = require('chai').Should()
+
 {Covenant, enqueue} = require('../covenant')
 
 # test scaffolding
