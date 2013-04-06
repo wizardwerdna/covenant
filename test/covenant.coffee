@@ -1,6 +1,8 @@
-should = require('chai').Should()
-
-{Covenant, enqueue} = require('../covenant')
+if typeof require == 'function'
+  should = require('chai').Should()
+  {Covenant, enqueue} = require('../covenant')
+else
+  {Covenant, enqueue, should} = window
 
 # test scaffolding
 p = p2 = p3 = returnPromise = callback = null
@@ -280,9 +282,10 @@ describe "Covenant", ->
           value.should.eql (iter*(iter+1))/2
         done()), 20
 
+   
   describe "Run covenant against the Promises/A+ Test Suite", ->
     @slow(500)
-    require('promises-aplus-tests').mocha
+    require?('promises-aplus-tests').mocha
       fulfilled: (value) -> p=new Covenant; p.fulfill(value); p
       rejected: (reason) -> p=new Covenant; p.reject(reason); p
       pending: ->

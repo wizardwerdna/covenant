@@ -1,7 +1,9 @@
-should = require('chai').Should()
-
-{Promise} = require('../promise')
-{enqueue} = require('../covenant')
+if typeof require == 'function'
+  should = require('chai').Should()
+  {Promise} = require('../promise')
+  {enqueue} = require('../covenant')
+else
+  {Promise, enqueue, should} = window
 
 # test scaffold
 p = p1 = p2 = p3 = returnPromise = callback = null
@@ -363,27 +365,30 @@ describe "Promise", ->
         testFulfilled(p)
         done()), 23
 
-  describe "Promise.timeout(ms, p)", ->
+  describe.only "Promise.timeout(ms, p)", ->
     beforeEach ->
       p = new Promise
-      p2 = Promise.timeout(20, p)
     it "should return a promise p2", ->
       p2?.then.should.be.a 'function'
     it "if p not resolved, p2 remains pending before ms milliseconds", (done)->
+      p2 = Promise.timeout(20, p)
       setTimeout (->
         testPending(p2)
-        done()), 17
+        done()), 10
     it "if p not resolved in time, p2 should be rejected after ms milliseconds", (done)->
-      p = Promise.delay(20)
+      p2 = Promise.timeout(20, p)
       setTimeout (->
-        p2.state.reason.should.eql new Error "timeout after 20 milliseconds"
-        done()), 25
+        p2.state.reason.toString().should.eql (
+          new Error "timeout after 20 milliseconds").toString()
+        done()), 30
     it "if p fulfilled before ms milliseconds, it remains so resolved afterward", (done)->
+      p2 = Promise.timeout(20, p)
       p.fulfill(dummy1)
       setTimeout (->
         p2.state.value.should.eql dummy1
         done()), 25
     it "if p rejected before ms milliseconds, it remains so rejected afterward", (done) ->
+      p2 = Promise.timeout(20, p)
       p.reject(dummyReason)
       setTimeout (->
         p2.state.reason.should.eql dummyReason

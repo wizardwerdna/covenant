@@ -1,5 +1,8 @@
 root = (exports ? this)
-{Covenant} = require './covenant'
+if typeof require == 'function'
+  {Covenant} = require './covenant'
+else
+  {Covenant} = window
 # {Transform} = require 'stream'
 # 
 # class PromiseStream extends Transform
@@ -35,14 +38,14 @@ class Promise extends Covenant
   @fromNode: (f)=>
     (args...) => @makePromise (p)->
       f(args..., p._nodeResolver)
-  @delay: (ms)=> @makePromise (p)-> 
+  @delay: (ms)=> @makePromise (p)->
     setTimeout(p.fulfill, ms)
     p.always -> clearTimeout(t)
   @timeout: (ms, p) => @makePromise (p2)->
     err = new Error "timeout after #{ms} milliseconds"
-    t = setTimeout (-> p.reject err), ms
+    t = setTimeout (-> p2.reject err), ms
     p.then p2.fulfill, p2.reject
-    p.always -> clearTimeout(t)
+    p2.always -> clearTimeout(t)
   # aggregate promises
   @when: (promises...) => @makePromise (pAll)=>
     pAll.results = new Array promises.length
