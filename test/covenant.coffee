@@ -1,5 +1,5 @@
 should = require 'should'
-{Covenant} = require('../covenant')
+{Covenant, enqueue} = require('../covenant')
 
 # test scaffolding
 p = p2 = p3 = returnPromise = callback = null
@@ -53,7 +53,7 @@ describe "Covenant", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.then(nonFunction, __) returns p2 fulfilled with value", (done)->
       p2 = p.then(undefined, undefined)
-      setImmediate ->
+      enqueue ->
         p2.state.value.should.eql dummy
         done()
     describe ", p2=p.then(function, __)", ->
@@ -64,13 +64,13 @@ describe "Covenant", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.then( (->dummy2), undefined)
-          setImmediate ->
+          enqueue ->
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.then( (->throw dummyReason), undefined )
-          setImmediate ->
+          enqueue ->
             p2.state.reason.should.eql dummyReason
             done()
       describe ", and function returns a promise", ->
@@ -96,7 +96,7 @@ describe "Covenant", ->
     beforeEach -> p.reject(dummy)
     it ", p2=p.then(__, nonFunction) returns p2 rejected with reason", (done)->
       p2 = p.then(undefined, undefined)
-      setImmediate ->
+      enqueue ->
         p2.state.reason.should.eql dummy
         done()
     describe ", p2=p.then(__, function)", ->
@@ -105,13 +105,13 @@ describe "Covenant", ->
       describe ", and function returns a non-promise value", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.then( undefined, (->dummy2))
-          setImmediate ->
+          enqueue ->
             p2.state.value.should.eql dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.then( undefined, (->throw dummyReason))
-          setImmediate ->
+          enqueue ->
             p2.state.reason.should.eql dummyReason
             done()
       describe ", and function returns a promise", ->
@@ -141,19 +141,19 @@ describe "Covenant", ->
         type.should.eql 'function'
       it ", after p.fulfill(value), p2 is fulfilled with value", (done)->
         p.fulfill(dummy)
-        setImmediate ->
+        enqueue ->
           p2.state.value.should.eql dummy
           done()
       it ", after reject(reason), p2 is rejected with value", (done)->
         p.reject(dummyReason)
-        setImmediate ->
+        enqueue ->
           p2.state.reason.should.eql dummyReason
           done()
       describe ", and then p3=p.then(onFulfil, onReject)", ->
         it "p2 should be fulfilled after p.fulfill", (done)->
           p3=p.then( )
           p.fulfill(dummy)
-          setImmediate ->
+          enqueue ->
             testFulfilled(p2)
             done()
         it "p2 and p3 should be fulfilled in sequence", (done) ->

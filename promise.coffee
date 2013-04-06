@@ -1,30 +1,29 @@
 root = (exports ? this)
-{bestTick, bestImmediate, Covenant} = require './covenant'
-root.bestTick = bestTick
-{Transform} = require 'stream'
+{Covenant} = require './covenant'
+# {Transform} = require 'stream'
+# 
+# class PromiseStream extends Transform
+#   constructor: (@promise, @options={passthrough: "false"}) ->
+#     @chunks = null
+#     super()
+#     @on('error', @promise.reject)
+#     @resume() unless @options.passthrough
+#     @
+#   _transform: (chunk, encoding, callback) ->
+#     @_collect(chunk, encoding, callback)
+#     callback(null, chunk) if @options.passthrough
+#   end: ->
+#     @promise.fulfill(@_joinCollection)
+#     super()
+#   _collect: (chunk, encoding, callback) ->
+#     if @chunks
+#       @chunks += chunk
+#     else
+#       @chunks = chunk
+#   _joinCollection: ->
+#     @chunks
 
-class PromiseStream extends Transform
-  constructor: (@promise, @options={passthrough: "false"}) ->
-    @chunks = null
-    super()
-    @on('error', @promise.reject)
-    @resume() unless @options.passthrough
-    @
-  _transform: (chunk, encoding, callback) ->
-    @_collect(chunk, encoding, callback)
-    callback(null, chunk) if @options.passthrough
-  end: ->
-    @promise.fulfill(@_joinCollection)
-    super()
-  _collect: (chunk, encoding, callback) ->
-    if @chunks
-      @chunks += chunk
-    else
-      @chunks = chunk
-  _joinCollection: ->
-    @chunks
-
-root.PromiseStream = PromiseStream
+# root.PromiseStream = PromiseStream
 
 class Promise extends Covenant
   constructor: -> super()
@@ -61,7 +60,7 @@ class Promise extends Covenant
   always: (callback) -> @then callback, callback
 
   # node stream interface
-  stream: (options) => new PromiseStream @, options
+  # stream: (options) => new PromiseStream @, options
 
   # restricted instances
   resolver: =>
