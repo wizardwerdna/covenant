@@ -1,8 +1,5 @@
-if typeof require == 'function'
-  should = require('chai').Should()
-  {Covenant, enqueue} = require('../covenant')
-else
-  {Covenant, enqueue, should} = window
+should = window?.should ? require('chai').Should()
+{Covenant, enqueue} = window ? require '../covenant'
 
 # test scaffolding
 p = p2 = p3 = returnPromise = callback = null

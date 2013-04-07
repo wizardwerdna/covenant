@@ -1,8 +1,5 @@
 root = (exports ? this)
-if typeof require == 'function'
-  {Covenant} = require './covenant'
-else
-  {Covenant} = window
+{Covenant} = window or require './covenant'
 # {Transform} = require 'stream'
 # 
 # class PromiseStream extends Transform

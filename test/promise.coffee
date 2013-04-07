@@ -1,9 +1,6 @@
-if typeof require == 'function'
-  should = require('chai').Should()
-  {Promise} = require('../promise')
-  {enqueue} = require('../covenant')
-else
-  {Promise, enqueue, should} = window
+should = window?.should ? require('chai').Should()
+{Promise} = window ? require '../promise'
+{enqueue} = window ? require '../covenant'
 
 # test scaffold
 p = p1 = p2 = p3 = returnPromise = callback = null
@@ -365,7 +362,7 @@ describe "Promise", ->
         testFulfilled(p)
         done()), 23
 
-  describe.only "Promise.timeout(ms, p)", ->
+  describe "Promise.timeout(ms, p)", ->
     beforeEach ->
       p = new Promise
     it "should return a promise p2", ->
