@@ -1,32 +1,8 @@
 root = (exports ? this)
-{Covenant} = window or require './covenant'
-# {Transform} = require 'stream'
-# 
-# class PromiseStream extends Transform
-#   constructor: (@promise, @options={passthrough: "false"}) ->
-#     @chunks = null
-#     super()
-#     @on('error', @promise.reject)
-#     @resume() unless @options.passthrough
-#     @
-#   _transform: (chunk, encoding, callback) ->
-#     @_collect(chunk, encoding, callback)
-#     callback(null, chunk) if @options.passthrough
-#   end: ->
-#     @promise.fulfill(@_joinCollection)
-#     super()
-#   _collect: (chunk, encoding, callback) ->
-#     if @chunks
-#       @chunks += chunk
-#     else
-#       @chunks = chunk
-#   _joinCollection: ->
-#     @chunks
-
-# root.PromiseStream = PromiseStream
+{Covenant} = window ? require './covenant'
 
 class Promise extends Covenant
-  constructor: -> super()
+  constructor: (state, init)-> super(state, init)
   # constructors
   @makePromise: (f) -> p = new Promise; f(p); p
   @pending: => @makePromise ->
