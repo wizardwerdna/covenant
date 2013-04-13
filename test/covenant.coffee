@@ -1,5 +1,5 @@
 should = window?.should ? require('chai').Should()
-{Covenant, enqueue} = window ? require '../covenant'
+{Core, Covenant, enqueue} = window ? require '../covenant'
 
 # test scaffolding
 p = p2 = p3 = returnPromise = callback = null
@@ -15,9 +15,9 @@ testPending = (p)->
   should.not.exist p.state?.value, "promise fulfilled, not pending"
   should.not.exist p.state?.reason, "promise rejected, not pending"
 
-describe "Covenant", ->
+describe "Core", ->
   beforeEach ->
-    p = new Covenant
+    p = new Core
 
   describe "state transitions", ->
     it "should default to a pending state", ->
@@ -75,7 +75,7 @@ describe "Covenant", ->
             done()
       describe ", and function returns a promise", ->
         beforeEach ->
-          returnPromise = new Covenant
+          returnPromise = new Core
           callback = -> returnPromise
         describe "fulfilled with a value", ->
           beforeEach -> returnPromise.fulfill dummy2
@@ -116,7 +116,7 @@ describe "Covenant", ->
             done()
       describe ", and function returns a promise", ->
         beforeEach ->
-          returnPromise = new Covenant
+          returnPromise = new Core
           callback = -> returnPromise
         describe "fulfilled with a value", ->
           beforeEach -> returnPromise.fulfill dummy2
@@ -177,7 +177,7 @@ describe "Covenant", ->
 
   describe "pending promise p, when p2=p.then(f,r), and f returns a promise", ->
     beforeEach ->
-      returnPromise = new Covenant
+      returnPromise = new Core
       p2 = p.then((->returnPromise), (->returnPromise))
     describe ", p is fulfilled", ->
       beforeEach -> p.fulfill(dummy)
@@ -242,21 +242,21 @@ describe "Covenant", ->
 
   describe "p.fulfill", ->
     it "should be bound to p", ->
-      p = new Covenant
+      p = new Core
       f = p.fulfill
       f(dummy)
       p.state.value.should.eql dummy
 
   describe "p.reject should be bound to p", ->
     it "should be bound to p", ->
-      p = new Covenant
+      p = new Core
       f = p.reject
       f(dummyReason)
       p.state.reason.should.eql dummyReason
 
   describe "p.then should be bound to p", ->
     it "should be bound to p", (done)->
-      p = new Covenant
+      p = new Core
       f = p.then
       callback = (value) ->
         value.should.eql dummy
@@ -267,10 +267,10 @@ describe "Covenant", ->
   describe "torture test using reduce (exposed a recursive nextTick)", ->
     it "should add the first numberOfIterations integers", (done)->
       numberOfIterations = 10000
-      (initialPromise = (new Covenant)).fulfill(0)
+      (initialPromise = (new Core)).fulfill(0)
       p = [1..numberOfIterations].reduce ((promise, nextVal)->
         promise.then (currentVal) ->
-          d = new Covenant
+          d = new Core
           d.fulfill(currentVal + nextVal)
           d
       ), initialPromise
@@ -283,10 +283,10 @@ describe "Covenant", ->
   describe "Run covenant against the Promises/A+ Test Suite", ->
     @slow(500)
     require?('promises-aplus-tests').mocha
-      fulfilled: (value) -> p=new Covenant; p.fulfill(value); p
-      rejected: (reason) -> p=new Covenant; p.reject(reason); p
+      fulfilled: (value) -> p=new Core; p.fulfill(value); p
+      rejected: (reason) -> p=new Core; p.reject(reason); p
       pending: ->
-        p = new Covenant
+        p = new Core
         promise: p
         fulfill: p.fulfill
         reject: p.reject

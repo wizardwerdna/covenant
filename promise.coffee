@@ -1,7 +1,7 @@
 root = (exports ? this)
-{Covenant} = window ? require './covenant'
+{Covenant, Core} = window ? require './covenant'
 
-class Promise extends Covenant
+class Promise extends Core
   constructor: (state, init)-> super(state, init)
   # constructors
   @makePromise: (f) -> p = new Promise; f(p); p

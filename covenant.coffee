@@ -6,13 +6,18 @@ root.enqueue = enqueue =
   (task) -> setTimeout(task, 0)
 
 class Covenant
-  constructor: -> @state = new PendingState
+  constructor: (@then=->)->
+root.Covenant = Covenant
+
+class Core extends Covenant
+  constructor: (init=->)->
+    @state = new PendingState
+    init(@resolve, @reject, @)
+  then: (onFulfill, onReject) =>
+    new @constructor (res, rej, p2) =>
+      @state._schedule(onFulfill, onReject, p2)
   fulfill: (value) => @state = @state.fulfill(value)
   reject: (reason) => @state = @state.reject(reason)
-  then: (onFulfill, onReject) =>
-    p2 = new @constructor
-    @state._schedule(onFulfill, onReject, p2)
-    p2
   resolve: (value) =>
     if value instanceof Covenant
       value.then @fulfill, @reject
@@ -27,8 +32,8 @@ class Covenant
         @fulfill value
     catch e
       @reject e
-
-root.Covenant = Covenant
+  promise: -> new Covenant @then
+root.Core = Core
 
 class PendingState
   constructor: -> @pendeds = []
@@ -38,8 +43,7 @@ class PendingState
 
 class CompletedState
   constructor: (pendeds) ->
-    for pended in pendeds
-      do(pended) => @_schedule(pended...)
+    @_schedule(pended...) for pended in pendeds
   fulfill: -> @
   reject: -> @
   _runCallback: (datum, callback, fallback, p2) ->
