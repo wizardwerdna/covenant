@@ -2,29 +2,28 @@ root = (exports ? this)
 {Covenant, Core} = window ? require './covenant'
 
 class Promise extends Core
-  constructor: (state, init)-> super(state, init)
+  constructor: (init)-> super(init)
   # constructors
-  @makePromise: (f) -> p = new Promise; f(p); p
-  @pending: => @makePromise ->
-  @fulfilled: (value) => @makePromise (p)-> p.fulfill(value)
-  @rejected: (reason) => @makePromise (p)-> p.reject(reason)
+  @pending: => new Promise
+  @fulfilled: (value) => new Promise (resolve)-> resolve(value)
+  @rejected: (reason) => new Promise (__, reject)-> reject(reason)
   @fromNode: (f)=>
-    (args...) => @makePromise (p)->
+    (args...) => new Promise (_, __, p)->
       f(args..., p._nodeResolver)
-  @delay: (ms)=> @makePromise (p)->
-    setTimeout(p.fulfill, ms)
+  @delay: (ms)=> new Promise (resolve, __, p)->
+    setTimeout(resolve, ms)
     p.always -> clearTimeout(t)
-  @timeout: (ms, p) => @makePromise (p2)->
+  @timeout: (ms, p) => new Promise (resolve, reject, p2)->
     err = new Error "timeout after #{ms} milliseconds"
-    t = setTimeout (-> p2.reject err), ms
-    p.then p2.fulfill, p2.reject
+    t = setTimeout (-> reject err), ms
+    resolve(p)
     p2.always -> clearTimeout(t)
   # aggregate promises
-  @when: (promises...) => @makePromise (pAll)=>
+  @when: (promises...) => new Promise (resolve, reject, pAll)=>
     pAll.results = new Array promises.length
     pAll.numLeft = promises.length
     if promises.length == 0
-      pAll.fulfill []
+      resolve []
     else
       for p, i in promises
         do(p, i) => @_scheduleResolution(pAll,p,i)

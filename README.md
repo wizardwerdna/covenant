@@ -4,16 +4,15 @@
 
 # Covenant 
 
-Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests), as well as the present draft of version 1.1 of the test suite.  Covenant is very performant and extremely lightweight, its three-function core being 52 lines of Coffeesript, compiling to 170 lines of javascript that minimizes to just 960 bytes uglified and compressed.  The elegant three-function API (counting the constructor) provides enough functionality to satisfy the Promises/A+ specificationand provide the core for a full-featured promise implementation, which is also providede
-
- 
+Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/promises-spec) implementation written in Coffeescript.  Covenant, its core class is a bare-bones implementation that passes the [Promises/A+ Test Suite](https://github.com/promises-aplus/promises-tests), as well as the present draft of version 1.1 of the test suite.  Covenant's core is very performant and extremely lightweight.  
 ## The Covenant (Core) API
 
 ```coffeescript
-{Covenant} = require('covenant')
+{Covenant, Core} = require('covenant')
 
-# create a new promise
-p = new Covenant
+# create a new promise, `init` is an optional function
+# that will be passed the resolution and reject functions
+p = new Core 
 
 # fulfill it with a value
 p.fulfill(value)
@@ -34,7 +33,7 @@ covenant.then onFulfilled, onRejected
 
 ## The Promise (Extended) API
 
-Promise, more full-featured extension of Covenant is included.  It weighs in at an additional 62 lines of Coffeescript. Altogether with the Core, Promise compiles to 324 lines and 1.6K bytes uglified and compressed.  It provides: a nice collection of promise-generating, an aggregation function, some convenience functions and functions for securely sharing promise objects with clients for limited use.
+Promise, more full-featured extension of Covenant's core is included, although it is in pre-alpha form at this time.  It provides: a nice collection of promise-generating operations, an aggregation function, some convenience functions and functions for securely sharing promise objects with clients for limited use.
   
 ### Promise Generaton Functions
 
@@ -127,12 +126,6 @@ p.thenable().fulfill(1) # => message does not exist
 Download it, clone it, or `npm install wizardwerdna/covenant`
 
 Covenant has no dependencies, but does use process.nextTick, found in modern Browsers.  If process.nextTick is not a function, Covenant falls back to setImmediate, and then to setTimeout.  If you are using ancient browsers, it is highly recommended that you use a shim to implement (fake) nextTick and/or setImmediate.
-
-## Why another promise implementation?
-
-I set out to write Covenant, just for myself, so to achieve a better understanding of the nuances of the Promise pattern.  The Promises/A+ specification seemed elegant, but I couldn't seem to grok it without more. Reading the code of various compliant mplementations was helpful, but I still didn't seem to own it.  I began the experiment by "cowboy" coding a first set, using the test suite to verify that things were working.  Finally, I discarded that code as one to throw away, and rebuilt it in pure BDD red-green-refactor style.
-
-Having a well-understood testbed for promises, I will probably extend covenant to a more full-featured implementation.
 
 ## Credits
 

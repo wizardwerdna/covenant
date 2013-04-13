@@ -15,7 +15,7 @@
 
     __extends(Promise, _super);
 
-    function Promise(state, init) {
+    function Promise(init) {
       var _this = this;
       this._httpResolver = function(res) {
         return Promise.prototype._httpResolver.apply(_this, arguments);
@@ -29,29 +29,22 @@
       this.resolver = function() {
         return Promise.prototype.resolver.apply(_this, arguments);
       };
-      Promise.__super__.constructor.call(this, state, init);
+      Promise.__super__.constructor.call(this, init);
     }
 
-    Promise.makePromise = function(f) {
-      var p;
-      p = new Promise;
-      f(p);
-      return p;
-    };
-
     Promise.pending = function() {
-      return Promise.makePromise(function() {});
+      return new Promise;
     };
 
     Promise.fulfilled = function(value) {
-      return Promise.makePromise(function(p) {
-        return p.fulfill(value);
+      return new Promise(function(resolve) {
+        return resolve(value);
       });
     };
 
     Promise.rejected = function(reason) {
-      return Promise.makePromise(function(p) {
-        return p.reject(reason);
+      return new Promise(function(__, reject) {
+        return reject(reason);
       });
     };
 
@@ -59,15 +52,15 @@
       return function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        return Promise.makePromise(function(p) {
+        return new Promise(function(_, __, p) {
           return f.apply(null, __slice.call(args).concat([p._nodeResolver]));
         });
       };
     };
 
     Promise.delay = function(ms) {
-      return Promise.makePromise(function(p) {
-        setTimeout(p.fulfill, ms);
+      return new Promise(function(resolve, __, p) {
+        setTimeout(resolve, ms);
         return p.always(function() {
           return clearTimeout(t);
         });
@@ -75,13 +68,13 @@
     };
 
     Promise.timeout = function(ms, p) {
-      return Promise.makePromise(function(p2) {
+      return new Promise(function(resolve, reject, p2) {
         var err, t;
         err = new Error("timeout after " + ms + " milliseconds");
         t = setTimeout((function() {
-          return p2.reject(err);
+          return reject(err);
         }), ms);
-        p.then(p2.fulfill, p2.reject);
+        resolve(p);
         return p2.always(function() {
           return clearTimeout(t);
         });
@@ -91,12 +84,12 @@
     Promise.when = function() {
       var promises;
       promises = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-      return Promise.makePromise(function(pAll) {
+      return new Promise(function(resolve, reject, pAll) {
         var i, p, _i, _len, _results;
         pAll.results = new Array(promises.length);
         pAll.numLeft = promises.length;
         if (promises.length === 0) {
-          return pAll.fulfill([]);
+          return resolve([]);
         } else {
           _results = [];
           for (i = _i = 0, _len = promises.length; _i < _len; i = ++_i) {

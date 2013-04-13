@@ -48,6 +48,7 @@
       this.then = function(onFulfill, onReject) {
         return Core.prototype.then.apply(_this, arguments);
       };
+      Core.__super__.constructor.call(this, this.then);
       this.state = new PendingState;
       init(this.resolve, this.reject, this);
     }

@@ -8,7 +8,8 @@
     "build": "npm run-script buildPromise",
     "buildPromise": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee promise.coffee",
     "buildCovenant": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee",
-    "uglifyjs": "node_modules/.bin/uglifyjs index.js > index.js.min"
+    "uglifyjs": "node_modules/.bin/uglifyjs index.js > index.js.min",
+    "nesh": "nesh"
   },
   "repository": {
     "type": "git",

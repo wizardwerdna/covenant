@@ -11,8 +11,9 @@ root.Covenant = Covenant
 
 class Core extends Covenant
   constructor: (init=->)->
+    super(@then)
     @state = new PendingState
-    init(@resolve, @reject, @)
+    init(@resolve, @reject, this)
   then: (onFulfill, onReject) =>
     new @constructor (res, rej, p2) =>
       @state._schedule(onFulfill, onReject, p2)
