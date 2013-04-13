@@ -11,7 +11,7 @@ class Promise extends Core
     (args...) => new Promise (_, __, p)->
       f(args..., p._nodeResolver)
   @delay: (ms)=> new Promise (resolve, __, p)->
-    setTimeout(resolve, ms)
+    setTimeout((->resolve(ms)), ms)
     p.always -> clearTimeout(t)
   @timeout: (ms, p) => new Promise (resolve, reject, p2)->
     err = new Error "timeout after #{ms} milliseconds"

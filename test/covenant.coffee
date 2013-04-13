@@ -1,4 +1,13 @@
 should = window?.should ? require('chai').Should()
+chai = window?.chai ? require('chai')
+
+sinon = window?.sinon ? require('sinon')
+sinonChai = window?.sinonChai ? require('sinon-chai')
+chai.use sinonChai
+
+{covenantTestHelper} = window?.covenantTestHelper ? (require './helpers/covenantTestHelper')
+chai.use covenantTestHelper
+
 {Core, Covenant, enqueue} = window ? require '../covenant'
 
 # test scaffolding
@@ -8,53 +17,36 @@ dummy1 = {dummy: 'dummy1'}
 dummy2 = {dummy2: 'dummy2'}
 dummyReason = new Error 'dummyReason'
 
-# status testing
-testFulfilled = (p)-> p.state.should.have.ownProperty "value", "promise not fulfilled"
-testRejected = (p)-> p.state.should.have.ownProperty "reason", "promise not rejected"
-testPending = (p)->
-  should.not.exist p.state?.value, "promise fulfilled, not pending"
-  should.not.exist p.state?.reason, "promise rejected, not pending"
-
 describe "Core", ->
   beforeEach ->
     p = new Core
 
   describe "state transitions", ->
+    it "should be a Covenant", ->
+      p.should.be.a.covenant
     it "should default to a pending state", ->
-      testPending(p)
+      p.should.be.pending
     it "should be rejected after a call to reject() from the pending state", ->
-      p.reject()
-      testRejected(p)
+      p.reject(dummyReason)
+      p.should.be.rejected.withReason(dummyReason)
     it "should be fulfilled after a call to fulfill() fron the pending state", ->
-      p.fulfill()
-      testFulfilled(p)
-    it "should remain fulfilled, even if subsequently rejected", ->
-      p.fulfill()
-      p.reject()
-      testFulfilled(p)
-    it "should remain rejected, even if subsequently fulfilled", ->
-      p.reject()
-      p.fulfill()
-      testRejected(p)
-
-  describe "state transition datum", ->
-    it "should remember the given value after fulfill(value)", ->
       p.fulfill(dummy)
-      p.state.value.should.eql dummy
-      p.reject(undefined)
-      p.state.value.should.eql dummy
-    it "should remember the given reason after reject(reason)", ->
-      p.reject(dummy)
-      p.state.reason.should.eql dummy
-      p.state.reason.should.eql dummy
-      p.fulfill(undefined)
-  
+      p.should.be.fulfilled.withValue(dummy)
+    it "should remain fulfilled, even if subsequently rejected", ->
+      p.fulfill(dummy)
+      p.reject(dummyReason)
+      p.should.be.fulfilled
+    it "should remain rejected, even if subsequently fulfilled", ->
+      p.reject(dummyReason)
+      p.fulfill(dummy)
+      p.should.be.rejected.withReason(dummyReason)
+
   describe "instance p, fulfilled with value", ->
     beforeEach -> p.fulfill(dummy)
     it ", p2=p.then(nonFunction, __) returns p2 fulfilled with value", (done)->
       p2 = p.then(undefined, undefined)
       enqueue ->
-        p2.state.value.should.eql dummy
+        p2.should.be.fulfilled.withValue dummy
         done()
     describe ", p2=p.then(function, __)", ->
       it ", executes the function on the value", (done) ->
@@ -65,13 +57,13 @@ describe "Core", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.then( (->dummy2), undefined)
           enqueue ->
-            p2.state.value.should.eql dummy2
+            p2.should.be.fulfilled.withValue dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.then( (->throw dummyReason), undefined )
           enqueue ->
-            p2.state.reason.should.eql dummyReason
+            p2.should.be.rejected.withReason dummyReason
             done()
       describe ", and function returns a promise", ->
         beforeEach ->
@@ -82,14 +74,14 @@ describe "Core", ->
           it "p2 should be fulfilled with the returnPromise's value", (done)->
             p2 = p.then(callback, undefined)
             setTimeout (->
-              p2.state.value.should.eql dummy2
+              p2.should.be.fulfilled.withValue dummy2
               done()), 20
         describe "rejected with a reason", ->
           beforeEach -> returnPromise.reject dummyReason
           it "p2 should be rejected with the returnPromise's reason", (done)->
             p2 = p.then(callback, undefined)
             setTimeout (->
-              p2.state.reason.should.eql dummyReason
+              p2.should.be.rejected.withReason dummyReason
               done()), 20
 
   describe "instance p, rejected with reason", ->
@@ -97,7 +89,7 @@ describe "Core", ->
     it ", p2=p.then(__, nonFunction) returns p2 rejected with reason", (done)->
       p2 = p.then(undefined, undefined)
       enqueue ->
-        p2.state.reason.should.eql dummy
+        p2.should.be.rejected.withReason dummy
         done()
     describe ", p2=p.then(__, function)", ->
       it ", executes the function on the reason", (done) ->
@@ -106,13 +98,13 @@ describe "Core", ->
         it "p2 is fulfilled with the returned value", (done)->
           p2 = p.then( undefined, (->dummy2))
           enqueue ->
-            p2.state.value.should.eql dummy2
+            p2.should.be.fulfilled.withValue dummy2
             done()
       describe ", and function throws an exception", ->
         it "p2 is rejected with the exception as its reason", (done)->
           p2 = p.then( undefined, (->throw dummyReason))
           enqueue ->
-            p2.state.reason.should.eql dummyReason
+            p2.should.be.rejected.withReason dummyReason
             done()
       describe ", and function returns a promise", ->
         beforeEach ->
@@ -123,14 +115,14 @@ describe "Core", ->
           it "p2 should be fulfilled with the returnPromise's value", (done)->
             p2 = p.then(undefined, callback)
             setTimeout (->
-              p2.state.value.should.eql dummy2
+              p2.should.be.fulfilled.withValue dummy2
               done()), 20
         describe "rejected with a reason", ->
           beforeEach -> returnPromise.reject dummyReason
           it "p2 should be rejected with the returnPromise's reason", (done)->
             p2 = p.then(undefined, callback)
             setTimeout (->
-              p2.state.reason.should.eql dummyReason
+              p2.should.be.rejected.withReason dummyReason
               done()), 20
 
   describe "pending instance p", ->
@@ -142,37 +134,37 @@ describe "Core", ->
       it ", after p.fulfill(value), p2 is fulfilled with value", (done)->
         p.fulfill(dummy)
         enqueue ->
-          p2.state.value.should.eql dummy
+          p2.should.be.fulfilled.withValue dummy
           done()
       it ", after reject(reason), p2 is rejected with value", (done)->
         p.reject(dummyReason)
         enqueue ->
-          p2.state.reason.should.eql dummyReason
+          p2.should.be.rejected.withReason dummyReason
           done()
       describe ", and then p3=p.then(onFulfil, onReject)", ->
         it "p2 should be fulfilled after p.fulfill", (done)->
           p3=p.then( )
           p.fulfill(dummy)
           enqueue ->
-            testFulfilled(p2)
+            p2.should.be.fulfilld
             done()
         it "p2 and p3 should be fulfilled in sequence", (done) ->
           p3=p.then(
             ((value)->
-              testFulfilled(p2)
+              p2.should.be.fulfillled
               value.should.eql dummy
               done()),
             ((reason)->throw new Error) )
-          testPending(p2)
+          p2.should.be.pending
           p.fulfill(dummy)
         it "p2 and p3 should be rejected in sequence", (done) ->
           p3=p.then(
             ((value)->throw new Error),
             ((reason)->
-              testRejected(p2)
+              p2.should.be.rejected
               reason.should.eql dummyReason
               done()))
-          testPending(p2)
+          p2.should.be.pending
           p.reject(dummyReason)
 
   describe "pending promise p, when p2=p.then(f,r), and f returns a promise", ->
@@ -183,37 +175,37 @@ describe "Core", ->
       beforeEach -> p.fulfill(dummy)
       it "p2 should be a pending promise", (done)->
         setTimeout (->
-          testPending(p2)
+          p2.should.be.pending
           done()), 100
       describe ", after returnPromise.fulfill(value)", ->
         beforeEach -> returnPromise.fulfill(dummy2)
         it ", p2 should be fulfilled with the value", (done)->
           setTimeout (->
-            p2.state.value.should.eql dummy2
+            p2.should.be.fulfilled.withValue dummy2
             done()), 100
       describe ", after returnPromise.reject(reason)", ->
         beforeEach -> returnPromise.reject(dummyReason)
         it ", p2 should be rejected for the reason", (done)->
           setTimeout (->
-            p2.state.reason.should.eql dummyReason
+            p2.should.be.rejected.withReason dummyReason
             done()), 20
     describe ", p is rejected", ->
       beforeEach -> p.reject(dummyReason)
       it "p2 should be a pending promise", (done)->
         setTimeout (->
-          testPending(p2)
+          p2.should.be.pending
           done()), 100
       describe ", after returnPromise.fulfill(value)", ->
         beforeEach -> returnPromise.fulfill(dummy2)
         it ", p2 should be fulfilled with the value", (done)->
           setTimeout (->
-            p2.state.value.should.eql dummy2
+            p2.should.be.fulfilled.withValue dummy2
             done()), 100
       describe ", after returnPromise.reject(reason)", ->
         beforeEach -> returnPromise.reject(dummyReason)
         it ", p2 should be rejected for the reason", (done)->
           setTimeout (->
-            p2.state.reason.should.eql dummyReason
+            p2.should.be.rejected.withReason dummyReason
             done()), 20
           
   describe "per spec, then must return before", ->
@@ -245,14 +237,14 @@ describe "Core", ->
       p = new Core
       f = p.fulfill
       f(dummy)
-      p.state.value.should.eql dummy
+      p.should.be.fulfilled.withValue dummy
 
   describe "p.reject should be bound to p", ->
     it "should be bound to p", ->
       p = new Core
       f = p.reject
       f(dummyReason)
-      p.state.reason.should.eql dummyReason
+      p.should.be.rejected.withReason dummyReason
 
   describe "p.then should be bound to p", ->
     it "should be bound to p", (done)->
@@ -279,7 +271,6 @@ describe "Core", ->
           value.should.eql (iter*(iter+1))/2
         done()), 20
 
-   
   describe "Run covenant against the Promises/A+ Test Suite", ->
     @slow(500)
     require?('promises-aplus-tests').mocha

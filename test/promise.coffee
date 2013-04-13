@@ -1,4 +1,14 @@
 should = window?.should ? require('chai').Should()
+chai = window?.chai ? require('chai')
+
+sinon = window?.sinon ? require('sinon')
+sinonChai = window?.sinonChai ? require('sinon-chai')
+chai.use sinonChai
+
+{covenantTestHelper} = window?.covenantTestHelper ? (require './helpers/covenantTestHelper')
+chai.use covenantTestHelper
+should = window?.should ? require('chai').Should()
+
 {Promise} = window ? require '../promise'
 {enqueue} = window ? require '../covenant'
 
@@ -11,39 +21,39 @@ dummy3 = {dummy: 'dummy3'}
 dummyReason = new Error 'dummyReason'
 dummyReason2 = new Error 'dummyReason2'
 
-# status testing
-testFulfilled = (p)-> p.state.should.have.ownProperty "value", "promise not fulfilled"
-testRejected = (p)-> p.state.should.have.ownProperty "reason", "promise not rejected"
-testPending = (p)->
-  should.not.exist p.state?.value, "promise fulfilled, not pending"
-  should.not.exist p.state?.reason, "promise rejected, not pending"
+# # status testing
+# testFulfilled = (p)-> p.state.should.have.ownProperty "value", "promise not fulfilled"
+# testRejected = (p)-> p.state.should.have.ownProperty "reason", "promise not rejected"
+# testPending = (p)->
+#   should.not.exist p.state?.value, "promise fulfilled, not pending"
+#   should.not.exist p.state?.reason, "promise rejected, not pending"
 
 describe "Promise", ->
   beforeEach -> p = new Promise
 
   describe "state transitions", ->
     it "should default to a pending state", ->
-      testPending(p)
+      p.should.be.pending
     it "should be rejected after a call to reject() from the pending state", ->
-      p.reject()
-      testRejected(p)
+      p.reject(dummyReason)
+      p.should.be.rejected
     it "should be fulfilled after a call to fulfill() fron the pending state", ->
-      p.fulfill()
-      testFulfilled(p)
+      p.fulfill(dummy)
+      p.should.be.fulfilled
     it "should remain fulfilled, even if subsequently rejected", ->
-      p.fulfill()
-      p.reject()
-      testFulfilled(p)
+      p.fulfill(dummy)
+      p.reject(dummyReason)
+      p.should.be.fulfilled
     it "should remain rejected, even if subsequently fulfilled", ->
-      p.reject()
-      p.fulfill()
-      testRejected(p)
+      p.reject(dummyReason)
+      p.fulfill(dummy)
+      p.should.be.rejected
 
   describe "state transition datum", ->
     it "should remember the given value after fulfill(value)", ->
       p.fulfill(dummy)
       p.state.value.should.eql dummy
-      p.reject(undefined)
+      p.reject(dummyReason)
       p.state.value.should.eql dummy
     it "should remember the given reason after reject(reason)", ->
       p.reject(dummy)
@@ -258,7 +268,7 @@ describe "Promise", ->
     it "should synchronously return an aggregate promise", ->
       'function'.should.eql typeof p?.then
     it "should synchronously return a fulfilled promise", ->
-      testFulfilled(p)
+      p.should.be.fulfilled
     it "should synchronously return a promise fulfilled with the values", ->
       p.state.value.should.eql [dummy1, dummy2, dummy3]
   describe "After p = Promise.when(v1, v2, p1), p1 a value-fulfilled promise", ->
@@ -283,7 +293,7 @@ describe "Promise", ->
       p = Promise.when(dummy1, p1, p2)
     it "should be pending when not all promises have been fulfilled", ->
       p1.fulfill(dummy2)
-      testPending(p)
+      p.should.be.pending
     it "should be fulfilled wth a value array after promises are fulfilled with values", (done) ->
       p1.fulfill(dummy2)
       p2.fulfill(dummy3)
@@ -301,7 +311,7 @@ describe "Promise", ->
       p1.fulfill(p3)
       p2.fulfill(dummy3)
       setTimeout (->
-        testPending(p)
+        p.should.be.pending
         done()), 20
     it "should be fulfilled after p1 is fulfilled with a pending promise, later fulfilled", (done) ->
       p3 = new Promise
@@ -337,7 +347,7 @@ describe "Promise", ->
         (Promise.fromNode((a,b,c,d)->)(1,2,3))?.then.should.be.a 'function'
       it "should be pending until f calls its callback", (done)->
         setTimeout (->
-          testPending Promise.fromNode((cb)->)()
+          Promise.fromNode((cb)->)().should.be.pending
           done()), 20
       it "should fulfill with value if f's cb(false, value)", (done) ->
         setTimeout (->
@@ -352,14 +362,14 @@ describe "Promise", ->
     it "should return a promise", ->
       Promise.delay(20)?.then.should.be.a 'function'
     it "should be pending until ms milliseconds have passed", (done)->
-      p = Promise.delay(20)
+      p = Promise.delay(50)
       setTimeout (->
-        testPending(p)
-        done()), 17
+        p.should.be.pending
+        done()), 40
     it "should be fulfilled after ms milliseconds have passed", (done)->
       p = Promise.delay(20)
       setTimeout (->
-        testFulfilled(p)
+        p.should.be.fulfilled
         done()), 23
 
   describe "Promise.timeout(ms, p)", ->
@@ -370,7 +380,7 @@ describe "Promise", ->
     it "if p not resolved, p2 remains pending before ms milliseconds", (done)->
       p2 = Promise.timeout(20, p)
       setTimeout (->
-        testPending(p2)
+        p2.should.be.pending
         done()), 10
     it "if p not resolved in time, p2 should be rejected after ms milliseconds", (done)->
       p2 = Promise.timeout(20, p)

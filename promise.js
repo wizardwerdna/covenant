@@ -60,7 +60,9 @@
 
     Promise.delay = function(ms) {
       return new Promise(function(resolve, __, p) {
-        setTimeout(resolve, ms);
+        setTimeout((function() {
+          return resolve(ms);
+        }), ms);
         return p.always(function() {
           return clearTimeout(t);
         });
