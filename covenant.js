@@ -12,7 +12,7 @@
     return setTimeout(task, 0);
   };
 
-  Covenant = (function() {
+  root.Covenant = Covenant = (function() {
 
     function Covenant(then) {
       this.then = then != null ? then : function() {};
@@ -22,9 +22,7 @@
 
   })();
 
-  root.Covenant = Covenant;
-
-  Core = (function(_super) {
+  root.Core = Core = (function(_super) {
 
     __extends(Core, _super);
 
@@ -50,13 +48,13 @@
       };
       Core.__super__.constructor.call(this, this.then);
       this.state = new PendingState;
-      init(this.resolve, this.reject, this);
+      init.call(this, this.resolve, this.reject, this);
     }
 
     Core.prototype.then = function(onFulfill, onReject) {
       var _this = this;
-      return new this.constructor(function(res, rej, p2) {
-        return _this.state._schedule(onFulfill, onReject, p2);
+      return new this.constructor(function(resolve, reject) {
+        return _this.state.resolveThen(onFulfill, onReject, resolve, reject);
       });
     };
 
@@ -98,8 +96,6 @@
 
   })(Covenant);
 
-  root.Core = Core;
-
   PendingState = (function() {
 
     function PendingState() {
@@ -114,8 +110,10 @@
       return new RejectedState(reason, this.pendeds);
     };
 
-    PendingState.prototype._schedule = function(f, r, p) {
-      return this.pendeds.push([f, r, p]);
+    PendingState.prototype.resolveThen = function(onF, onR, res, rej) {
+      return this.pendeds.push(function(state) {
+        return state.resolveThen(onF, onR, res, rej);
+      });
     };
 
     return PendingState;
@@ -128,7 +126,7 @@
       var pended, _i, _len;
       for (_i = 0, _len = pendeds.length; _i < _len; _i++) {
         pended = pendeds[_i];
-        this._schedule.apply(this, pended);
+        pended(this);
       }
     }
 
@@ -140,15 +138,15 @@
       return this;
     };
 
-    CompletedState.prototype._runCallback = function(datum, callback, fallback, p2) {
+    CompletedState.prototype.resolveThen = function(datum, callback, fallback, resolve, reject) {
       try {
         if (typeof callback === 'function') {
-          return p2.resolve(callback(datum));
+          return resolve(callback(datum));
         } else {
           return fallback(datum);
         }
       } catch (e) {
-        return p2.reject(e);
+        return reject(e);
       }
     };
 
@@ -165,10 +163,10 @@
       FulfilledState.__super__.constructor.call(this, pended);
     }
 
-    FulfilledState.prototype._schedule = function(onFulfill, __, p2) {
+    FulfilledState.prototype.resolveThen = function(onFulfill, _, res, rej) {
       var _this = this;
       return enqueue(function() {
-        return _this._runCallback(_this.value, onFulfill, p2.fulfill, p2);
+        return FulfilledState.__super__.resolveThen.call(_this, _this.value, onFulfill, res, res, rej);
       });
     };
 
@@ -185,10 +183,10 @@
       RejectedState.__super__.constructor.call(this, pended);
     }
 
-    RejectedState.prototype._schedule = function(__, onReject, p2) {
+    RejectedState.prototype.resolveThen = function(_, onReject, res, rej) {
       var _this = this;
       return enqueue(function() {
-        return _this._runCallback(_this.reason, onReject, p2.reject, p2);
+        return RejectedState.__super__.resolveThen.call(_this, _this.reason, onReject, rej, res, rej);
       });
     };
 

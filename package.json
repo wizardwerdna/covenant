@@ -1,6 +1,6 @@
 {
   "name": "covenant",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "Covenant is an ~60-line Promises/A+ implementation written in Coffeescript. Covenant passes the Promises/A+ Test Suite. It compiles to under 200 lines of javascript, less than 500 bytes without compression.",
   "main": "covenant.js",
   "scripts": {
@@ -9,7 +9,7 @@
     "buildPromise": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee promise.coffee",
     "buildCovenant": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee",
     "uglifyjs": "node_modules/.bin/uglifyjs index.js > index.js.min",
-    "nesh": "nesh"
+    "repl": "nesh -c --eval repl"
   },
   "repository": {
     "type": "git",
@@ -28,7 +28,8 @@
     "chai": "~1.5.0",
     "sinon-chai": "~2.3.1",
     "sinon": "~1.6.0",
-    "promises-aplus-tests": "~1.3.1"
+    "promises-aplus-tests": "~1.3.1",
+    "connect": "~2.7.5"
   },
   "keywords": [
     "promise",

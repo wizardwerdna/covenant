@@ -2,10 +2,11 @@ should = window?.should ? require('chai').Should()
 chai = window?.chai ? require('chai')
 
 sinon = window?.sinon ? require('sinon')
-sinonChai = window?.sinonChai ? require('sinon-chai')
-chai.use sinonChai
+unless window?
+  sinonChai = window?.sinonChai ? require('sinon-chai')
+  chai.use sinonChai
 
-{covenantTestHelper} = window?.covenantTestHelper ? (require './helpers/covenantTestHelper')
+{covenantTestHelper} = window ? (require './helpers/covenantTestHelper')
 chai.use covenantTestHelper
 should = window?.should ? require('chai').Should()
 
@@ -20,13 +21,6 @@ dummy2 = {dummy: 'dummy2'}
 dummy3 = {dummy: 'dummy3'}
 dummyReason = new Error 'dummyReason'
 dummyReason2 = new Error 'dummyReason2'
-
-# # status testing
-# testFulfilled = (p)-> p.state.should.have.ownProperty "value", "promise not fulfilled"
-# testRejected = (p)-> p.state.should.have.ownProperty "reason", "promise not rejected"
-# testPending = (p)->
-#   should.not.exist p.state?.value, "promise fulfilled, not pending"
-#   should.not.exist p.state?.reason, "promise rejected, not pending"
 
 describe "Promise", ->
   beforeEach -> p = new Promise
@@ -100,7 +94,7 @@ describe "Promise", ->
             p2 = p.done callback
             setTimeout (->
               p2.state.reason.should.eql dummyReason
-              done()), 20
+              done()), 50
 
   describe "instance p, rejected with reason", ->
     beforeEach -> p.reject(dummy)

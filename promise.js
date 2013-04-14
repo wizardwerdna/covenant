@@ -52,32 +52,33 @@
       return function() {
         var args;
         args = 1 <= arguments.length ? __slice.call(arguments, 0) : [];
-        return new Promise(function(_, __, p) {
-          return f.apply(null, __slice.call(args).concat([p._nodeResolver]));
+        return new Promise(function() {
+          return f.apply(null, __slice.call(args).concat([this._nodeResolver]));
         });
       };
     };
 
     Promise.delay = function(ms) {
-      return new Promise(function(resolve, __, p) {
+      return new Promise(function() {
+        var _this = this;
         setTimeout((function() {
-          return resolve(ms);
+          return _this.resolve(ms);
         }), ms);
-        return p.always(function() {
+        return this.always(function() {
           return clearTimeout(t);
         });
       });
     };
 
     Promise.timeout = function(ms, p) {
-      return new Promise(function(resolve, reject, p2) {
+      return new Promise(function(resolve, reject) {
         var err, t;
         err = new Error("timeout after " + ms + " milliseconds");
         t = setTimeout((function() {
           return reject(err);
         }), ms);
         resolve(p);
-        return p2.always(function() {
+        return this.always(function() {
           return clearTimeout(t);
         });
       });
@@ -122,7 +123,8 @@
     Promise.prototype.resolver = function() {
       return {
         reject: this.reject,
-        fulfill: this.fulfill
+        fulfill: this.fulfill,
+        resolve: this.resolve
       };
     };
 

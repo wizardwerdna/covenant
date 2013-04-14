@@ -2,10 +2,11 @@ should = window?.should ? require('chai').Should()
 chai = window?.chai ? require('chai')
 
 sinon = window?.sinon ? require('sinon')
-sinonChai = window?.sinonChai ? require('sinon-chai')
-chai.use sinonChai
+unless window?
+  sinonChai = window?.sinonChai ? require('sinon-chai')
+  chai.use sinonChai
 
-{covenantTestHelper} = window?.covenantTestHelper ? (require './helpers/covenantTestHelper')
+{covenantTestHelper} = window ? (require './helpers/covenantTestHelper')
 chai.use covenantTestHelper
 
 {Core, Covenant, enqueue} = window ? require '../covenant'

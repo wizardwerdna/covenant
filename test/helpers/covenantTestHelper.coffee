@@ -1,7 +1,11 @@
 root = (exports ? this)
-{Covenant} = require '../../covenant'
-util = require 'util'
-inspect = (x) -> util.inspect x, false, 3, true
+{Covenant} = window ? require '../../covenant'
+inspect = (x)->x
+# inspect = if window?
+#   (x) -> x
+# else
+#   util = require 'util'
+#   (x) -> util.inspect x, false, 3, true
 covenantTestHelper = (_chai, util) ->
   Assertion = _chai.Assertion
   Assertion.addProperty 'covenant', ->
@@ -33,4 +37,5 @@ covenantTestHelper = (_chai, util) ->
   Assertion.addProperty 'pending', ->
     new Assertion(@_obj).not.to.be.fulfilled
     new Assertion(@_obj).not.to.be.rejected
+
 root.covenantTestHelper = covenantTestHelper

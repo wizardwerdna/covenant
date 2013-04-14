@@ -3,15 +3,26 @@
     <meta charset="utf-8">
     <title>Mocha Tests</title>
     <link rel="stylesheet" href="../node_modules/mocha/mocha.css" />
+
+    <!-- test libraries -->
     <script src="../node_modules/mocha/mocha.js"></script>
     <script src="../node_modules/chai/chai.js"></script>
-    <script>should = chai.Should();</script>
+    <script src="../node_modules/sinon/lib/sinon.js"></script>
+    <script src="../node_modules/sinon-chai/lib/sinon-chai.js"></script>
+
+    <!-- source code  -->
     <script src="../covenant.coffee" type="text/coffeescript"></script>
     <script src="../promise.coffee" type="text/coffeescript"></script>
+
+    <!-- tests -->
+    <script src="./helpers/covenantTestHelper.coffee" type="text/coffeescript"></script>
+    <script>
+      should = chai.Should();
+    </script>
     <script src="./covenant.coffee" type="text/coffeescript"></script>
     <script src="./promise.coffee" type="text/coffeescript"></script>
     <script src="http://jashkenas.github.io/coffee-script/extras/coffee-script.js"></script>
-    <script>
+    <script type="text/javascript">
       window.onload = function(){
         console.log("testing..");
         mocha.setup('bdd');
@@ -19,7 +30,7 @@
         mocha.globals(['jQuery']);
         setTimeout(function(){
           mocha.run();
-        }, 300);
+        }, 500);
         console.log("finished..");
       };
     </script>

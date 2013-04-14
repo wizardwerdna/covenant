@@ -8,16 +8,16 @@ class Promise extends Core
   @fulfilled: (value) => new Promise (resolve)-> resolve(value)
   @rejected: (reason) => new Promise (__, reject)-> reject(reason)
   @fromNode: (f)=>
-    (args...) => new Promise (_, __, p)->
-      f(args..., p._nodeResolver)
-  @delay: (ms)=> new Promise (resolve, __, p)->
-    setTimeout((->resolve(ms)), ms)
-    p.always -> clearTimeout(t)
-  @timeout: (ms, p) => new Promise (resolve, reject, p2)->
+    (args...)=> new Promise ->
+      f(args..., @._nodeResolver)
+  @delay: (ms)=> new Promise ->
+    setTimeout((=>@resolve(ms)), ms)
+    @always -> clearTimeout(t)
+  @timeout: (ms, p) => new Promise (resolve, reject)->
     err = new Error "timeout after #{ms} milliseconds"
     t = setTimeout (-> reject err), ms
     resolve(p)
-    p2.always -> clearTimeout(t)
+    @always -> clearTimeout(t)
   # aggregate promises
   @when: (promises...) => new Promise (resolve, reject, pAll)=>
     pAll.results = new Array promises.length
@@ -41,6 +41,7 @@ class Promise extends Core
   resolver: =>
     reject: @reject
     fulfill: @fulfill
+    resolve: @resolve
 
   thenable: =>
     then: @then
