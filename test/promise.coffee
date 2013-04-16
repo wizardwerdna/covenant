@@ -1,4 +1,4 @@
-snhould = window?.should ? require('chai').Should()
+should = window?.should ? require('chai').Should()
 chai = window?.chai ? require('chai')
 
 sinon = window?.sinon ? require('sinon')

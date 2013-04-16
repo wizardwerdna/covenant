@@ -2,3 +2,15 @@
 {Covenant, Core} = require './covenant'
 {Promise} = require './promise'
 
+onceAmong= do()->
+  doNow = null
+  (functions...) ->
+    doAfter = (f) ->
+      console.log "\nwe are out of business"
+      (->)
+    doFirst = (f) ->
+      console.log "\nDOING ONE THING WELL"
+      doNow = (value)-> console.log "trying to do it again, but not doing it with", value
+      f
+    doNow = doFirst
+    functions.map (each)-> (f) -> doNow(f)

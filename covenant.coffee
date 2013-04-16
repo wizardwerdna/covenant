@@ -27,12 +27,26 @@ root.Core = class Core extends Covenant
   _resolveNonCovenantValue: (value) =>
     try
       valueThen = value?.then
-      if typeof valueThen is 'function'
-        valueThen @resolve, @reject
+      if value is Object(value) and typeof valueThen is 'function'
+        @_assimilateForeignThenable value, valueThen
       else
         @fulfill value
     catch e
       @reject e
+  _assimilateForeignThenable: (value, valueThen)=>
+    called = false
+    try
+      valueThen.call value,
+        (value) => unless called
+          called = true
+          @resolve(value)
+      , (reason) => unless called
+        called = true
+        @reject(reason)
+    catch e
+      unless called
+        called = true
+        @reject e
   promise: -> new Covenant @then
 
 class PendingState
