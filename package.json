@@ -1,7 +1,7 @@
 {
   "name": "covenant",
   "version": "0.0.9",
-  "description": "Covenant is a tight and performant Promises/A+ implementation written in Coffeescript. Covenant passes the Promises/A+ Test Suite (Version 1.1)."
+  "description": "Covenant is a tight and performant Promises/A+ implementation written in Coffeescript. Covenant passes the Promises/A+ Test Suite (Version 1.1).",
   "main": "covenant.js",
   "scripts": {
     "test": "node_modules/.bin/mocha -G -R dot --compilers :coffee-script test/*.coffee",
