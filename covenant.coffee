@@ -8,10 +8,13 @@ root.Covenant = class Covenant
   constructor: (@then=->)->
 
 root.Core = class Core extends Covenant
-  constructor: (init=->)->
-    super(@then)
+  constructor: (resolver=->)->
+    throw new TypeError("resolver must be a function") unless typeof resolver == 'function'
     @state = new PendingState
-    init.call(this, @resolve, @reject, this)
+    try
+      resolver.call(this, @resolve, @reject, this)
+    catch e
+      @reject e
   then: (onFulfill, onReject) => new @constructor (resolve, reject) =>
     @state.resolveThen(onFulfill, onReject, resolve, reject)
   fulfill: (value) => @state = @state.fulfill(value)

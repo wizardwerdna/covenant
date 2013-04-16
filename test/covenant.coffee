@@ -22,6 +22,27 @@ describe "Core", ->
   beforeEach ->
     p = new Core
 
+  describe "creation", ->
+    it "should throw a TypeError unless its parameter is a function", ->
+      (->new Core 23).should.throw TypeError
+    it "should call the resolver synchronously brefore returning", (done)->
+      returned = false
+      new Core ->
+        returned.should.be.false
+        done()
+      returned = true
+    it "should pass the resolver, rejector and the promise as parameters",
+      resolver = sinon.spy()
+      p = new Core resolver
+      resolver.should.have.been.calledWith(p.resolve, p.reject, p)
+    it "should call the resolver in the context of the promise",
+      resolver = sinon.spy()
+      p = new Core resolver
+      resolver.calledOn(p).should.be.true
+    it "should reject with an error if the resolver throws", ->
+      p = new Core (-> throw dummyReason)
+      p.should.be.rejected.withReason(dummyReason)
+
   describe "state transitions", ->
     it "should be a Covenant", ->
       p.should.be.a.covenant

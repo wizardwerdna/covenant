@@ -1,4 +1,4 @@
-should = window?.should ? require('chai').Should()
+snhould = window?.should ? require('chai').Should()
 chai = window?.chai ? require('chai')
 
 sinon = window?.sinon ? require('sinon')
@@ -26,6 +26,8 @@ describe "Promise", ->
   beforeEach -> p = new Promise
 
   describe "state transitions", ->
+    it "should sheboing correctly", ->
+      Promise.fulfilled([1,2,3]).should.be.fulfilled.withValue([1,2,3])
     it "should default to a pending state", ->
       p.should.be.pending
     it "should be rejected after a call to reject() from the pending state", ->
@@ -46,13 +48,13 @@ describe "Promise", ->
   describe "state transition datum", ->
     it "should remember the given value after fulfill(value)", ->
       p.fulfill(dummy)
-      p.state.value.should.eql dummy
+      p.should.be.fulfilled.withValue dummy
       p.reject(dummyReason)
-      p.state.value.should.eql dummy
+      p.should.be.fulfilled.withValue dummy
     it "should remember the given reason after reject(reason)", ->
       p.reject(dummy)
-      p.state.reason.should.eql dummy
-      p.state.reason.should.eql dummy
+      p.should.be.rejected.withReason dummy
+      p.should.be.rejected.withReason dummy
       p.fulfill(undefined)
   
   describe "instance p, fulfilled with value", ->
@@ -257,80 +259,143 @@ describe "Promise", ->
           done()
         thenHasReturned = true
 
-  describe "After p = Promise.when(v1, v2, v3), all values", ->
-    beforeEach -> p = Promise.when dummy1, dummy2, dummy3
-    it "should synchronously return an aggregate promise", ->
-      'function'.should.eql typeof p?.then
-    it "should synchronously return a fulfilled promise", ->
-      p.should.be.fulfilled
-    it "should synchronously return a promise fulfilled with the values", ->
-      p.state.value.should.eql [dummy1, dummy2, dummy3]
-  describe "After p = Promise.when(v1, v2, p1), p1 a value-fulfilled promise", ->
-    beforeEach ->
-      p1 = Promise.fulfilled(dummy3)
-      p = Promise.when dummy1, dummy2, p1
-    it "should return a fulfilled promise with the appropriate value array", (done)->
-      setTimeout (->
-        p.state.value.should.eql [dummy1, dummy2, dummy3]
-        done()), 20
-  describe "After p = Promise.when(v1, v2, p1), p1 a value-rejected promise", ->
-    beforeEach ->
-      p1 = Promise.rejected(dummyReason)
-      p = Promise.when dummy1, dummy2, p1
-    it "should return a fulfilled promise with the appropriate value array", (done)->
-      setTimeout (->
-        p.state.reason.should.eql dummyReason
-        done()), 20
-  describe "After p = Promise.when(v1, p1, p2), p1 and p2 pending promises", ->
-    beforeEach ->
-      [p1, p2] = [new Promise, new Promise]
-      p = Promise.when(dummy1, p1, p2)
-    it "should be pending when not all promises have been fulfilled", ->
-      p1.fulfill(dummy2)
-      p.should.be.pending
-    it "should be fulfilled wth a value array after promises are fulfilled with values", (done) ->
-      p1.fulfill(dummy2)
-      p2.fulfill(dummy3)
-      p.then (result) ->
-        result.should.eql [dummy1, dummy2, dummy3]
-        done()
-    it "should be rejected with the reason after the first promise is rejected", (done) ->
-      p1.reject(dummyReason)
-      p2.fulfill(dummy1)
-      p.then null, (reason) ->
-        reason.should.eql dummyReason
-        done()
-    it "should remain pending after one of p1 is fulfilled with a pending promise", (done) ->
-      p3 = new Promise
-      p1.fulfill(p3)
-      p2.fulfill(dummy3)
-      setTimeout (->
+  describe "map", ->
+    describe "with integers and square function", ->
+      beforeEach -> p = Promise.map [1,2,3], ((x)->x*x)
+      it "should be a promise",->
+        p.should.be.a.covenant
+      it "should be fulfilled with proper values",(done)->
+        p.then (value)->
+          value.should.eql [1,4,9]
+          done()
+    describe "with integers and failing function", ->
+      beforeEach -> p = Promise.map [1,2,3], (x)->
+        switch x
+          when 1 then 1
+          when 2 then throw "dummyReason"
+          when 3 then throw "dummyReason2"
+      it "should be a promise",->
+        p.should.be.a.covenant
+      it "should be rejected with the first thrown value",(done)->
+        p.then undefined, (reason)->
+          reason.should.eql "dummyReason"
+          done()
+    describe "with integer-fulfilled promises", ->
+      beforeEach -> p = Promise.map [Promise.of(1), Promise.of(2), Promise.of(3)], ((x)->x*x)
+      it "should be fulfilled with proper values",(done)->
+        p.then (value)->
+          value.should.eql [1,4,9]
+          done()
+    describe "with an integer, an integer-fulfilled promise and a pending promise", ->
+      beforeEach ->
+        p3 = new Promise
+        p = Promise.map [1, Promise.of(2), p3], ((x)->x*x)
+      it "should remain pending until the pending promise fulfills", (done)->
         p.should.be.pending
-        done()), 20
-    it "should be fulfilled after p1 is fulfilled with a pending promise, later fulfilled", (done) ->
-      p3 = new Promise
-      p1.fulfill(p3)
-      p2.fulfill(dummy3)
-      p3.fulfill(dummy2)
-      setTimeout (->
-        p.state.value.should.eql [dummy1, dummy2, dummy3]
-        done()), 20
-    it "should be rejected after p1 is fulfilled with a pending promise, later rejected", (done) ->
-      p3 = new Promise
-      p1.fulfill(p3)
-      p2.fulfill(dummy3)
-      p3.reject(dummyReason)
-      setTimeout (->
-        p.state.reason.should.eql dummyReason
-        done()), 20
-    it "should be fulfilled with values if p1, p2 and p3 were all initially fulfilled", (done)->
-      p1 = Promise.fulfilled(1)
-      p2 = Promise.fulfilled(2)
-      p3 = Promise.fulfilled(3)
-      p = Promise.when(p1, p2, p3)
-      setTimeout (->
-        p.state.value.should.eql [1,2,3]
-        done()), 20
+        setTimeout (->
+          p.should.be.pending
+          p3.fulfill(3)
+          p.then ->
+            p.should.be.fulfilled
+            done()), 20
+      it "should compute the result after fulfillment", (done)->
+        p3.fulfill(3)
+        p.then (value) ->
+          value.should.eql [1,4,9]
+          done()
+      it "should remain pending until the pending promise rejects", (done)->
+        p.should.be.pending
+        setTimeout (->
+          p.should.be.pending
+          p3.reject(dummyReason)
+          p.then undefined, ->
+            p.should.be.rejected
+            done()), 20
+      it "should be rejected with the failing reason", (done)->
+        p3.reject(dummyReason)
+        p.then undefined, (reason) ->
+          reason.should.eql dummyReason
+          done()
+    describe "with three pending promises", ->
+      beforeEach -> p=Promise.map [(p1=new Promise), (p2=new Promise), (p3=new Promise)], ((x)->x*x)
+      it "should fulfill with the correct value regardless of order", (done)->
+        p3.fulfill(3)
+        p1.fulfill(1)
+        p2.fulfill(2)
+        p.then (value)->
+          value.should.eql [1,4,9]
+          done()
+      it "should reject with the first rejected promise", (done)->
+        p3.fulfill(3)
+        p1.reject('dummyReason')
+        p2.reject('dummyReason2')
+        p.then undefined, (reason)->
+          reason.should.eql 'dummyReason'
+          done()
+    
+  describe "reduce", ->
+    describe "with empty array", ->
+      it "must reject unless an initial value is provided", (done)->
+        Promise.reduce([], ->).then undefined, (reason)->
+          reason.message.should.eql "resolve on empty array without an initial value"
+          done()
+      it "must resolve the iniial value if provided", (done)->
+        Promise.reduce([], (->), 1).then (value)->
+          value.should.eql 1
+          done()
+    describe "with singleton array", ->
+      it "must resolve the singleton value without an initial value", (done)->
+        Promise.reduce([1], (->)).then (value)->
+          value.should.eql 1
+          done()
+      it "should apply the function to the singleton and initial value, when given", (done)->
+        Promise.reduce([2], ((x,y)->x+y), 1).then ((value)->
+          value.should.eql 3
+          done())
+    describe "with three values", ->
+      it "must resolve correctly with values", (done)->
+        Promise.reduce([1,2,3], ((x,y)->x+y)).then (value)->
+          value.should.eql 6
+          done()
+    describe "with a value, a resolved promise and a pending promise", ->
+      beforeEach ->
+        p3 = new Promise
+        p = Promise.reduce([1,(Promise.of 2),p3], ((x,y)->x+y))
+      it "should remain pending when p3 remains unresolved", (done)->
+        setTimeout (->
+          p.should.be.pending
+          done()), 20
+      it "should be fulfilled with the correct value when p3 is resolved", (done)->
+        p3.resolve(3)
+        p.then (value)->
+          value.should.eql 6
+          done()
+    describe "with three promises", ->
+      beforeEach ->
+        @array = [p1, p2, p3] = [new Promise, new Promise, new Promise]
+        p = Promise.reduce @array, ((x,y)->x+y)
+      it "should calculate when fulfilled in order", (done)->
+        p1.fulfill 1
+        p2.fulfill 2
+        p3.fulfill 3
+        p.then (value) ->
+          value.should.eql 6
+          done()
+      it "should calculate when fulfilled in reverse order", (done)->
+        p3.fulfill 3
+        p2.fulfill 2
+        p1.fulfill 1
+        p.then (value) ->
+          value.should.eql 6
+          done()
+      it "should calculate when fulfilled in arbitrary order", (done)->
+        p2.fulfill 2
+        p1.fulfill 1
+        p3.fulfill 3
+        p.then (value) ->
+          value.should.eql 6
+          done()
+
 
   describe "Promise.fromNode", ->
     describe "when passed a function f", ->
@@ -356,10 +421,10 @@ describe "Promise", ->
     it "should return a promise", ->
       Promise.delay(20)?.then.should.be.a 'function'
     it "should be pending until ms milliseconds have passed", (done)->
-      p = Promise.delay(50)
+      p = Promise.delay(20)
       setTimeout (->
         p.should.be.pending
-        done()), 40
+        done()), 17 
     it "should be fulfilled after ms milliseconds have passed", (done)->
       p = Promise.delay(20)
       setTimeout (->
