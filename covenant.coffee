@@ -9,6 +9,7 @@ root.Covenant = class Covenant
 
 root.Core = class Core extends Covenant
   constructor: (resolver=->)->
+    return new @constructor unless this instanceof Covenant
     throw new TypeError("resolver must be a function") unless typeof resolver == 'function'
     @state = new PendingState
     try
@@ -30,9 +31,9 @@ root.Core = class Core extends Covenant
       if value isnt Object(value) or typeof valueThen isnt 'function'
         @fulfill value
       else # assimilate foreign thennable, assuring callbacks run at most once
-        alreadyRun = -> (alreadyRun=->false; true); false
-        resolveOnce = (v) => @resolve(v) unless alreadyRun()
-        rejectOnce = (r) => @reject(r) unless alreadyRun()
+        callbackHasRun = -> (callbackHasRun=->false; true); false
+        resolveOnce = (v) => @resolve(v) unless callbackHasRun()
+        rejectOnce = (r) => @reject(r) unless callbackHasRun()
         try
           valueThen.call value, resolveOnce, rejectOnce
         catch e
