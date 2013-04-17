@@ -27,26 +27,18 @@ root.Core = class Core extends Covenant
   _resolveNonCovenantValue: (value) =>
     try
       valueThen = value?.then
-      if value is Object(value) and typeof valueThen is 'function'
-        @_assimilateForeignThenable value, valueThen
-      else
+      if value isnt Object(value) or typeof valueThen isnt 'function'
         @fulfill value
+      else # assimilate foreign thennable, assuring callbacks run at most once
+        alreadyRun = -> (alreadyRun=->false; true); false
+        resolveOnce = (v) => @resolve(v) unless alreadyRun()
+        rejectOnce = (r) => @reject(r) unless alreadyRun()
+        try
+          valueThen.call value, resolveOnce, rejectOnce
+        catch e
+          rejectOnce e
     catch e
       @reject e
-  _assimilateForeignThenable: (value, valueThen)=>
-    called = false
-    try
-      valueThen.call value,
-        (value) => unless called
-          called = true
-          @resolve(value)
-      , (reason) => unless called
-        called = true
-        @reject(reason)
-    catch e
-      unless called
-        called = true
-        @reject e
   promise: -> new Covenant @then
 
 class PendingState
