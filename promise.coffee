@@ -1,8 +1,10 @@
-root = (exports ? this)
-{Covenant, Core} = window ? require './covenant'
+root = (exports ? this.Covenant)
+{Covenant, Core} = window?.Covenant ? require './covenant'
 
 class Promise extends Core
-  constructor: (init)-> super(init)
+  constructor: (resolver)->
+    return (new Promise resolver) unless this instanceof Covenant
+    super(resolver)
   # constructors
   @pending: => new Promise
   @fulfilled: (value) => new Promise (resolve)-> resolve(value)

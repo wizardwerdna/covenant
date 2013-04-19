@@ -1,4 +1,4 @@
-root = (exports ? this)
+root = (exports ? this.Covenant)
 
 root.enqueue = enqueue =
   (typeof setImmediate == 'function' && setImmediate) or
@@ -9,7 +9,7 @@ root.Covenant = class Covenant
 
 root.Core = class Core extends Covenant
   constructor: (resolver=->)->
-    return new @constructor unless this instanceof Covenant
+    return (new Core(resolver)) unless this instanceof Covenant
     throw new TypeError("resolver must be a function") unless typeof resolver == 'function'
     @state = new PendingState
     try
@@ -31,13 +31,11 @@ root.Core = class Core extends Covenant
       if value isnt Object(value) or typeof valueThen isnt 'function'
         @fulfill value
       else # assimilate foreign thennable, assuring callbacks run at most once
-        callbackHasRun = -> (callbackHasRun=->false; true); false
-        resolveOnce = (v) => @resolve(v) unless callbackHasRun()
-        rejectOnce = (r) => @reject(r) unless callbackHasRun()
+        once=do(done=false)->(f)->(x)->((done=true;f(x)) unless done)
         try
-          valueThen.call value, resolveOnce, rejectOnce
+          valueThen.call value, once(@resolve), once(@reject)
         catch e
-          rejectOnce e
+          once(@reject)(e)
     catch e
       @reject e
   promise: -> new Covenant @then
