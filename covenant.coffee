@@ -17,7 +17,7 @@ root.Core = class Core extends Covenant
     catch e
       @reject e
   then: (onFulfill, onReject) => new @constructor (resolve, reject) =>
-    @state.resolveThen(onFulfill, onReject, resolve, reject)
+    @state.applyThen(onFulfill, onReject, resolve, reject)
   fulfill: (value) => @state = @state.fulfill(value)
   reject: (reason) => @state = @state.reject(reason)
   resolve: (value) =>
@@ -44,30 +44,32 @@ class PendingState
   constructor: -> @pendeds = []
   fulfill: (value) -> new FulfilledState value, @pendeds
   reject: (reason) -> new RejectedState reason, @pendeds
-  resolveThen: (onF, onR, res, rej) ->
+  applyThen: (onFulfilled, onRejected, resolve, reject) ->
     @pendeds.push (state) ->
-      state.resolveThen(onF, onR, res, rej)
+      state.then(onFulfilled, onRejected).then(resolve, reject)
 
 class CompletedState
-  constructor: (pendeds) ->
-    pended(@) for pended in pendeds
+  constructor: (pendeds=[]) ->
+    enqueue => pended(@) for pended in pendeds
   fulfill: -> @
   reject: -> @
-  resolveThen: (datum, callback, fallback, resolve, reject) ->
+  then: (valueOrReason, onFulfilledOrRejected) ->
     try
-      if typeof callback is 'function'
-        resolve callback(datum)
+      if typeof onFulfilledOrRejected isnt 'function'
+        @
       else
-        fallback(datum)
+        new FulfilledState onFulfilledOrRejected(valueOrReason)
     catch e
-      reject e
-
+      new RejectedState e
+  applyThen: (onFulfilled, onRejected, resolve, reject) ->
+    enqueue => @.then(onFulfilled, onRejected).then(resolve, reject)
+    
 class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
-  resolveThen: (onFulfill, _, res, rej) ->
-    enqueue => super @value, onFulfill, res, res, rej
+  then: (onFulfill, onReject) ->
+    super(@value, onFulfill)
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
-  resolveThen: (_, onReject, res, rej) ->
-    enqueue => super @reason, onReject, rej, res, rej
+  then: (onFulfill, onReject) ->
+    super(@reason, onReject)
