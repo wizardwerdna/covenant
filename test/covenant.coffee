@@ -277,6 +277,40 @@ describe "Core", ->
         done()
       f(callback)
       p.fulfill(dummy)
+
+  describe.only "p.promise", ->
+    it "should be a Covenant", ->
+      p.promise.should.be.a.covenant
+    it "should be a thenable", ->
+      p.promise.then.should.be.a 'function'
+    it "should not provide resolution functions", ->
+      should.not.exist p.promise.fulfill
+      should.not.exist p.promise.reject
+      should.not.exist p.promise.resolve
+      Object.keys(p.promise).length.should.eql 1
+    it "should be directly linked to the state of p after p fulfilled", (done)->
+      p.fulfill(dummy)
+      p.promise.then (value)->
+        value.should.eql dummy
+        done()
+    it "should be directly linked to the state of p after p rejected", (done)->
+      p.reject(dummy)
+      p.should.be.rejected.withReason(dummy)
+      p.promise.then undefined, (reason)->
+        reason.should.eql dummy
+        done()
+    it "should be directly linked to the state of pending p, subsequently fulfilled", (done)->
+      p.promise.then (value)->
+        value.should.eql dummy
+        done()
+      p.fulfill(dummy)
+    it "should be directly linked to the state of pending p, subsequently rejected", (done)->
+      p.promise.then undefined, (reason)->
+        reason.should.eql dummy
+        done()
+      p.reject(dummy)
+    it "should have the identical .then function", ->
+      p.promise.then.should.equal p.then
   
   describe "torture test using reduce (exposed a recursive nextTick)", ->
     it "should add the first numberOfIterations integers", (done)->

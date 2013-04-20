@@ -12,6 +12,7 @@ root.Core = class Core extends Covenant
     return (new Core(resolver)) unless this instanceof Covenant
     throw new TypeError("resolver must be a function") unless typeof resolver == 'function'
     @state = new PendingState
+    @promise = @promise ? new Covenant(@then)
     try
       resolver.call(this, @resolve, @reject, this)
     catch e
@@ -38,7 +39,6 @@ root.Core = class Core extends Covenant
           once(@reject)(e)
     catch e
       @reject e
-  promise: -> new Covenant @then
 
 class PendingState
   constructor: -> @pendeds = []
