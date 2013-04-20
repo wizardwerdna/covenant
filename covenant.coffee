@@ -9,8 +9,10 @@ root.Covenant = class Covenant
 
 root.Core = class Core extends Covenant
   constructor: (resolver=->)->
-    return (new Core(resolver)) unless this instanceof Covenant
+    return (new Core(resolver)) unless this instanceof Core
     throw new TypeError("resolver must be a function") unless typeof resolver == 'function'
+    @_buildPromise(resolver)
+  _buildPromise: (resolver) ->
     @state = new PendingState
     @promise = @promise ? new Covenant(@then)
     try
@@ -18,7 +20,8 @@ root.Core = class Core extends Covenant
     catch e
       @reject e
   then: (onFulfill, onReject) => new @constructor (resolve, reject) =>
-    @state.applyThen(onFulfill, onReject, resolve, reject)
+    @state.schedule (state) ->
+      state.then(onFulfill, onReject).then(resolve, reject)
   fulfill: (value) => @state = @state.fulfill(value)
   reject: (reason) => @state = @state.reject(reason)
   resolve: (value) =>
@@ -44,16 +47,14 @@ class PendingState
   constructor: -> @pendeds = []
   fulfill: (value) -> new FulfilledState value, @pendeds
   reject: (reason) -> new RejectedState reason, @pendeds
-  applyThen: (onFulfilled, onRejected, resolve, reject) ->
-    @pendeds.push (state) ->
-      state.then(onFulfilled, onRejected).then(resolve, reject)
+  schedule: (f)=> @pendeds.push f
 
 class CompletedState
   constructor: (pendeds=[]) ->
     enqueue => pended(@) for pended in pendeds
   fulfill: -> @
   reject: -> @
-  then: (valueOrReason, onFulfilledOrRejected) ->
+  then: (onFulfilledOrRejected, valueOrReason) ->
     try
       if typeof onFulfilledOrRejected isnt 'function'
         @
@@ -61,15 +62,12 @@ class CompletedState
         new FulfilledState onFulfilledOrRejected(valueOrReason)
     catch e
       new RejectedState e
-  applyThen: (onFulfilled, onRejected, resolve, reject) ->
-    enqueue => @.then(onFulfilled, onRejected).then(resolve, reject)
+  schedule: (f)=> enqueue => f(@)
     
 class FulfilledState extends CompletedState
   constructor: (@value, pended) -> super pended
-  then: (onFulfill, onReject) ->
-    super(@value, onFulfill)
+  then: (onFulfill, onReject) -> super(onFulfill, @value)
 
 class RejectedState extends CompletedState
   constructor: (@reason, pended) -> super pended
-  then: (onFulfill, onReject) ->
-    super(@reason, onReject)
+  then: (onFulfill, onReject) -> super(onReject, @reason)

@@ -27,8 +27,7 @@
     __extends(Core, _super);
 
     function Core(resolver) {
-      var _ref,
-        _this = this;
+      var _this = this;
       if (resolver == null) {
         resolver = function() {};
       }
@@ -47,25 +46,32 @@
       this.then = function(onFulfill, onReject) {
         return Core.prototype.then.apply(_this, arguments);
       };
-      if (!(this instanceof Covenant)) {
+      if (!(this instanceof Core)) {
         return new Core(resolver);
       }
       if (typeof resolver !== 'function') {
         throw new TypeError("resolver must be a function");
       }
+      this._buildPromise(resolver);
+    }
+
+    Core.prototype._buildPromise = function(resolver) {
+      var _ref;
       this.state = new PendingState;
       this.promise = (_ref = this.promise) != null ? _ref : new Covenant(this.then);
       try {
-        resolver.call(this, this.resolve, this.reject, this);
+        return resolver.call(this, this.resolve, this.reject, this);
       } catch (e) {
-        this.reject(e);
+        return this.reject(e);
       }
-    }
+    };
 
     Core.prototype.then = function(onFulfill, onReject) {
       var _this = this;
       return new this.constructor(function(resolve, reject) {
-        return _this.state.applyThen(onFulfill, onReject, resolve, reject);
+        return _this.state.schedule(function(state) {
+          return state.then(onFulfill, onReject).then(resolve, reject);
+        });
       });
     };
 
@@ -120,6 +126,10 @@
   PendingState = (function() {
 
     function PendingState() {
+      var _this = this;
+      this.schedule = function(f) {
+        return PendingState.prototype.schedule.apply(_this, arguments);
+      };
       this.pendeds = [];
     }
 
@@ -131,10 +141,8 @@
       return new RejectedState(reason, this.pendeds);
     };
 
-    PendingState.prototype.applyThen = function(onFulfilled, onRejected, resolve, reject) {
-      return this.pendeds.push(function(state) {
-        return state.then(onFulfilled, onRejected).then(resolve, reject);
-      });
+    PendingState.prototype.schedule = function(f) {
+      return this.pendeds.push(f);
     };
 
     return PendingState;
@@ -148,6 +156,9 @@
       if (pendeds == null) {
         pendeds = [];
       }
+      this.schedule = function(f) {
+        return CompletedState.prototype.schedule.apply(_this, arguments);
+      };
       enqueue(function() {
         var pended, _i, _len, _results;
         _results = [];
@@ -167,7 +178,7 @@
       return this;
     };
 
-    CompletedState.prototype.then = function(valueOrReason, onFulfilledOrRejected) {
+    CompletedState.prototype.then = function(onFulfilledOrRejected, valueOrReason) {
       try {
         if (typeof onFulfilledOrRejected !== 'function') {
           return this;
@@ -179,10 +190,10 @@
       }
     };
 
-    CompletedState.prototype.applyThen = function(onFulfilled, onRejected, resolve, reject) {
+    CompletedState.prototype.schedule = function(f) {
       var _this = this;
       return enqueue(function() {
-        return _this.then(onFulfilled, onRejected).then(resolve, reject);
+        return f(_this);
       });
     };
 
@@ -200,7 +211,7 @@
     }
 
     FulfilledState.prototype.then = function(onFulfill, onReject) {
-      return FulfilledState.__super__.then.call(this, this.value, onFulfill);
+      return FulfilledState.__super__.then.call(this, onFulfill, this.value);
     };
 
     return FulfilledState;
@@ -217,7 +228,7 @@
     }
 
     RejectedState.prototype.then = function(onFulfill, onReject) {
-      return RejectedState.__super__.then.call(this, this.reason, onReject);
+      return RejectedState.__super__.then.call(this, onReject, this.reason);
     };
 
     return RejectedState;
