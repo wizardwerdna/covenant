@@ -27,7 +27,8 @@
     __extends(Core, _super);
 
     function Core(resolver) {
-      var _this = this;
+      var _ref,
+        _this = this;
       if (resolver == null) {
         resolver = function() {};
       }
@@ -53,6 +54,7 @@
         throw new TypeError("resolver must be a function");
       }
       this.state = new PendingState;
+      this.promise = (_ref = this.promise) != null ? _ref : new Covenant(this.then);
       try {
         resolver.call(this, this.resolve, this.reject, this);
       } catch (e) {
@@ -109,10 +111,6 @@
       } catch (e) {
         return this.reject(e);
       }
-    };
-
-    Core.prototype.promise = function() {
-      return new Covenant(this.then);
     };
 
     return Core;
