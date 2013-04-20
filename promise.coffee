@@ -1,10 +1,15 @@
 root = (exports ? this.Covenant)
 {Covenant, Core} = window?.Covenant ? require './covenant'
 
+extend = (consumer, provider) ->
+  consumer[k]=v for own k,v of provider
+  consumer
+
 class Promise extends Core
   constructor: (resolver)->
     return (new Promise resolver) unless this instanceof Covenant
     super(resolver)
+    extend @promise, done: @done, fail: @fail, always: @always
   # constructors
   @pending: => new Promise
   @fulfilled: (value) => new Promise (resolve)-> resolve(value)
@@ -59,18 +64,6 @@ class Promise extends Core
   fail: (onReject) -> @then null, onReject
   always: (callback) -> @then callback, callback
 
-# restricted instances
-  resolver: =>
-    reject: @reject
-    fulfill: @fulfill
-    resolve: @resolve
-
-  thenable: =>
-    then: @then
-    done: @done
-    fail: @fail
-    always: @always
-    
   @_isPromise: (p) -> typeof p?.then == 'function'
 
   _nodeResolver: (err, value) =>

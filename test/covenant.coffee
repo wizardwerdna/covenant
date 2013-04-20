@@ -278,7 +278,7 @@ describe "Core", ->
       f(callback)
       p.fulfill(dummy)
 
-  describe.only "p.promise", ->
+  describe "p.promise", ->
     it "should be a Covenant", ->
       p.promise.should.be.a.covenant
     it "should be a thenable", ->
