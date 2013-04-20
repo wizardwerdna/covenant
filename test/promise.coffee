@@ -460,7 +460,7 @@ describe "Promise", ->
         p2.state.reason.should.eql dummyReason
         done()), 25
 
-  describe.only "p.promise", ->
+  describe "p.promise", ->
     it "should also recognize promise convenience functions", ->
       p.promise.done.should.eql p.done
       p.promise.always.should.eql p.always

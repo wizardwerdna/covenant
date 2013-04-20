@@ -1,4 +1,5 @@
 npm-degbug.log
+coverage
 node_modules/
 builtAssets/
 *.swo
