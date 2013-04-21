@@ -5,6 +5,7 @@
   "main": "covenant.js",
   "scripts": {
     "test": "node_modules/.bin/mocha -G -R dot --compilers :coffee-script test/*.coffee",
+    "browserTest" : "test/helpers/browserTest.sh",
     "build": "npm run-script buildPromise",
     "buildPromise": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee promise.coffee",
     "buildCovenant": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee",
@@ -29,7 +30,8 @@
     "sinon-chai": "~2.3.1",
     "sinon": "~1.6.0",
     "promises-aplus-tests": "git://github.com/promises-aplus/promises-tests#spec-1.1",
-    "connect": "~2.7.5"
+    "connect": "~2.7.5",
+    "mocha-server": "~0.2.0"
   },
   "keywords": [
     "promise",
