@@ -5,7 +5,7 @@
   "main": "covenant.js",
   "scripts": {
     "test": "node_modules/.bin/mocha -G -R dot --compilers :coffee-script test/*.coffee",
-    "browserTest": "node_modules/.bin/karma start",
+    "browserTest": "node_modules/.bin/karma start --single-run",
     "build": "npm run-script buildPromise",
     "buildPromise": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee promise.coffee",
     "buildCovenant": "node_modules/.bin/coffee -j index.coffee -cm bestTick.coffee covenant.coffee",
