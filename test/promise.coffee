@@ -90,7 +90,7 @@
               p2 = p.done callback
               setTimeout (->
                 p2.state.value.should.eql dummy2
-                done()), 20
+                done()), 50
           describe "rejected with a reason", ->
             beforeEach -> returnPromise.reject dummyReason
             it "p2 should be rejected with the returnPromise's reason", (done)->
@@ -131,14 +131,14 @@
               p2 = p.fail callback
               setTimeout (->
                 p2.state.value.should.eql dummy2
-                done()), 20
+                done()), 30
           describe "rejected with a reason", ->
             beforeEach -> returnPromise.reject dummyReason
             it "p2 should be rejected with the returnPromise's reason", (done)->
               p2 = p.fail callback
               setTimeout (->
                 p2.state.reason.should.eql dummyReason
-                done()), 20
+                done()), 30
     
     describe "instance p, fulfilled with value", ->
       beforeEach -> p.fulfill(dummy)
@@ -172,14 +172,14 @@
               p2 = p.always callback
               setTimeout (->
                 p2.state.value.should.eql dummy2
-                always()), 20
+                always()), 30
           describe "rejected with a reason", ->
             beforeEach -> returnPromise.reject dummyReason
             it "p2 should be rejected with the returnPromise's reason", (always)->
               p2 = p.always callback
               setTimeout (->
                 p2.state.reason.should.eql dummyReason
-                always()), 20
+                always()), 30
 
     describe "instance p, rejected with reason", ->
       beforeEach -> p.reject(dummy)
@@ -213,14 +213,14 @@
               p2 = p.always callback
               setTimeout (->
                 p2.state.value.should.eql dummy2
-                always()), 20
+                always()), 30
           describe "rejected with a reason", ->
             beforeEach -> returnPromise.reject dummyReason
             it "p2 should be rejected with the returnPromise's reason", (always)->
               p2 = p.always callback
               setTimeout (->
                 p2.state.reason.should.eql dummyReason
-                always()), 20
+                always()), 30
     
     describe "per spec, done, fail and always must return before", ->
       describe "an onFulfill callback is executed", ->
@@ -298,7 +298,7 @@
             p3.fulfill(3)
             p.then ->
               p.should.be.fulfilled
-              done()), 20
+              done()), 30
         it "should compute the result after fulfillment", (done)->
           p3.fulfill(3)
           p.then (value) ->
@@ -311,7 +311,7 @@
             p3.reject(dummyReason)
             p.then undefined, ->
               p.should.be.rejected
-              done()), 20
+              done()), 30
         it "should be rejected with the failing reason", (done)->
           p3.reject(dummyReason)
           p.then undefined, (reason) ->
@@ -365,7 +365,7 @@
         it "should remain pending when p3 remains unresolved", (done)->
           setTimeout (->
             p.should.be.pending
-            done()), 20
+            done()), 30
         it "should be fulfilled with the correct value when p3 is resolved", (done)->
           p3.resolve(3)
           p.then (value)->
@@ -408,29 +408,29 @@
         it "should be pending until f calls its callback", (done)->
           setTimeout (->
             Promise.fromNode((cb)->)().should.be.pending
-            done()), 20
+            done()), 30
         it "should fulfill with value if f's cb(false, value)", (done) ->
           setTimeout (->
             Promise.fromNode((cb)->cb(false, dummy1))().state.value.should.eql dummy1
-            done()), 20
+            done()), 30
         it "should reject with err if f's cb(err, value) has truthy err", (done) ->
           setTimeout (->
             Promise.fromNode((cb)->cb(dummyReason, dummy1))().state.reason.should.eql dummyReason
-            done()), 20
+            done()), 30
 
     describe "Promise.delay(ms)", ->
       it "should return a promise", ->
-        Promise.delay(20)?.then.should.be.a 'function'
+        Promise.delay(30)?.then.should.be.a 'function'
       it "should be pending until ms milliseconds have passed", (done)->
-        p = Promise.delay(20)
+        p = Promise.delay(30)
         setTimeout (->
           p.should.be.pending
-          done()), 17 
+          done()), 17
       it "should be fulfilled after ms milliseconds have passed", (done)->
-        p = Promise.delay(20)
+        p = Promise.delay(30)
         setTimeout (->
           p.should.be.fulfilled
-          done()), 23
+          done()), 35
 
     describe "Promise.timeout(ms, p)", ->
       beforeEach ->
@@ -438,28 +438,28 @@
       it "should return a promise p2", ->
         p2?.then.should.be.a 'function'
       it "if p not resolved, p2 remains pending before ms milliseconds", (done)->
-        p2 = Promise.timeout(20, p)
+        p2 = Promise.timeout(30, p)
         setTimeout (->
           p2.should.be.pending
           done()), 10
       it "if p not resolved in time, p2 should be rejected after ms milliseconds", (done)->
-        p2 = Promise.timeout(20, p)
+        p2 = Promise.timeout(30, p)
         setTimeout (->
           p2.state.reason.toString().should.eql (
-            new Error "timeout after 20 milliseconds").toString()
+            new Error "timeout after 30 milliseconds").toString()
           done()), 30
       it "if p fulfilled before ms milliseconds, it remains so resolved afterward", (done)->
-        p2 = Promise.timeout(20, p)
+        p2 = Promise.timeout(40, p)
         p.fulfill(dummy1)
         setTimeout (->
           p2.state.value.should.eql dummy1
           done()), 25
       it "if p rejected before ms milliseconds, it remains so rejected afterward", (done) ->
-        p2 = Promise.timeout(20, p)
+        p2 = Promise.timeout(40, p)
         p.reject(dummyReason)
         setTimeout (->
           p2.state.reason.should.eql dummyReason
-          done()), 25
+          done()), 45
 
     describe "p.promise", ->
       it "should also recognize promise convenience functions", ->
