@@ -1,6 +1,8 @@
 // Karma configuration
 // Generated on Fri Apr 26 2013 10:37:48 GMT-0700 (PDT)
 
+phantomjs = require('phantomjs');
+process.env['PHANTOMJS_BIN'] = phantomjs.path;
 
 // base path, that will be used to resolve files and exclude
 basePath = '';
@@ -60,7 +62,7 @@ autoWatch = false;
 // - Safari (only Mac)
 // - PhantomJS
 // - IE (only Windows)
-browsers = ['Chrome', 'Firefox', 'Safari'];
+browsers = ['Chrome', 'Firefox', 'Safari', 'PhantomJS'];
 
 
 // If browser does not capture in given timeout [ms], kill it

@@ -10,14 +10,23 @@ Covenant is a fully compliant [Promises/A+](https://github.com/promises-aplus/pr
 ```coffeescript
 {Covenant, Core} = require('covenant')
 
-# create a new promise, `init` is an optional function
-# that will be passed the resolution and reject functions
+# create a new promise, which can be figured using subsequent
+# subsequent calls to the fulfill, reject and resolve methods
 p = new Core 
 
-# fulfill it with a value
+# the promise can be configured with a callback function, which
+# will be passed a resolution and rejection function, as well as
+# a reference to the promise itself. Also, `this` is set to reference
+# the promise.
+
+pDelay50ms = new Core (resolve, reject, promise) ->
+  setTimeout -> (
+    resolve('50 milliseconds have passed'), 50)
+
+# fulfill the promise with a value
 p.fulfill(value)
 
-# reject it, with a reason (such as an Error object)
+# reject the promise with a reason
 p.reject(reason)
 
 # Wrap another promise or foreign "thennable" and adopt its state.
@@ -25,23 +34,26 @@ p.reject(reason)
 # Works with Promise/A+-conforming and many non-conforming promises.
 p.resolve(promiseThennableOrValue)
 
+
 # schedule asynchronous handlers, as often as you like, before or after resolution
 # the handler may be a value, a function or a promise (an object having a function
 # property named "then."
 covenant.then onFulfilled, onRejected
+
+# A Covenant object with a single `then` method linked to the promise.
+# The promise can be passed to a client authorized to schedule callbacks
+# on the Core object, but will not be able to change its state.
+p.promise
 ```
 
 ## The Promise (Extended) API
 
 Promise, more full-featured extension of Covenant's core is included, although it is in pre-alpha form at this time.  It provides: a nice collection of promise-generating operations, an aggregation function, some convenience functions and functions for securely sharing promise objects with clients for limited use.
   
-### Promise Generaton Functions
+### Promise Generation Functions
 
 ```coffeescript
-{Promise} = require ('covenant')
-
-# Promise.makePromise(f): new up a promise p, apply f(p) and return p
-Promise.makePromise f
+{Promise} = require ('promise')
 
 # Promise.pending(): construct a pending promise
 p = Promise.pending()
@@ -106,21 +118,6 @@ p.always(callback)
 # differently, even when p has already resolved.
 ```
 
-### Protected Promise Instance Functions
-```coffeescript
-# p.resolver(): generates an object that can only call 
-# reject and fulfill, operating on p
-p.resolver().fulfill(10) # resolves p with value 10
-p.then # => message does not exist 
-
-# p.thenable(): generates an object linked to p that responds 
-# to then and convenience functions, but does not permit a client to
-# resolve p. 
-p.thenable().then console.log
-p.fulfill('hello, world!') # => 'hello, world!'
-p.thenable().fulfill(1) # => message does not exist 
-```
-
 ## Installation 
 
 Download it, clone it, or `npm install wizardwerdna/covenant`
@@ -136,6 +133,11 @@ I am indebted, in particular, to the work of Brian Cavalier, whose [when.js](htt
 1. clone the respository
 1. `npm install`
 1. `npm test`
+1. `npm run-script browserTest`
+
+The browser test will run the tests directly on Safari, Chrome, Firefox and phantomJS.
+Some configuration of `karma.conf.js` will be necessary if you haven't configured one
+or more of the browsers.  phantomJS was installed when you ran `npm install`.
 
 ## License
 

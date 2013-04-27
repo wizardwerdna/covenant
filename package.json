@@ -1,6 +1,6 @@
 {
   "name": "covenant",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Covenant is a tight and performant Promises/A+ implementation written in Coffeescript. Covenant passes the Promises/A+ Test Suite (Version 1.1).",
   "main": "covenant.js",
   "scripts": {
@@ -24,15 +24,12 @@
     "coffee-script": "~1.6.1",
     "jslint": "~0.1.9",
     "uglify-js": "~2.2.5",
-    "coffeeify": "~0.3.0",
-    "browserify": "~2.11.0",
     "chai": "~1.5.0",
     "sinon-chai": "~2.3.1",
     "sinon": "~1.6.0",
     "promises-aplus-tests": "git://github.com/promises-aplus/promises-tests#spec-1.1",
-    "connect": "~2.7.5",
-    "mocha-server": "~0.2.0",
-    "karma": "~0.8.5"
+    "karma": "~0.8.5",
+    "phantomjs": "~1.9.0-3"
   },
   "keywords": [
     "promise",

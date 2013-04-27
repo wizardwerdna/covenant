@@ -99,14 +99,14 @@
               p2 = p.then(callback, undefined)
               setTimeout (->
                 p2.should.be.fulfilled.withValue dummy2
-                done()), 20
+                done()), 100
           describe "rejected with a reason", ->
             beforeEach -> returnPromise.reject dummyReason
             it "p2 should be rejected with the returnPromise's reason", (done)->
               p2 = p.then(callback, undefined)
               setTimeout (->
                 p2.should.be.rejected.withReason dummyReason
-                done()), 20
+                done()), 100
 
     describe "instance p, rejected with reason", ->
       beforeEach -> p.reject(dummy)
@@ -140,14 +140,14 @@
               p2 = p.then(undefined, callback)
               setTimeout (->
                 p2.should.be.fulfilled.withValue dummy2
-                done()), 20
+                done()), 50
           describe "rejected with a reason", ->
             beforeEach -> returnPromise.reject dummyReason
             it "p2 should be rejected with the returnPromise's reason", (done)->
               p2 = p.then(undefined, callback)
               setTimeout (->
                 p2.should.be.rejected.withReason dummyReason
-                done()), 20
+                done()), 50
 
     describe "pending instance p", ->
       describe ", p2=p.then(value, value)", ->
@@ -212,7 +212,7 @@
           it ", p2 should be rejected for the reason", (done)->
             setTimeout (->
               p2.should.be.rejected.withReason dummyReason
-              done()), 20
+              done()), 50
       describe ", p is rejected", ->
         beforeEach -> p.reject(dummyReason)
         it "p2 should be a pending promise", (done)->
@@ -230,7 +230,7 @@
           it ", p2 should be rejected for the reason", (done)->
             setTimeout (->
               p2.should.be.rejected.withReason dummyReason
-              done()), 20
+              done()), 50
             
     describe "per spec, then must return before", ->
       describe "an onFulfill callback is executed", ->
@@ -327,6 +327,6 @@
         setTimeout (->
           p.then (value)->
             value.should.eql (iter*(iter+1))/2
-          done()), 20
+          done()), 50
 
 )(if typeof define=="function" then define else if window? then (factory) => factory((->), window['Covenant']||={}) else (factory) -> factory(require, exports, module))
