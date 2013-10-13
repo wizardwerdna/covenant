@@ -7,10 +7,18 @@
     @timeout(250)
     require('promises-aplus-tests')?.mocha
       fulfilled: (value) -> p=new Core; p.resolve(value); p
+      resolved: (value) -> p=new Core; p.resolve(value); p
       rejected: (reason) -> p=new Core; p.reject(reason); p
+      deferred: ->
+        p = new Core
+        promise: p
+        resolve: p.resolve
+        fulfill: p.resolve
+        reject: p.reject
       pending: ->
         p = new Core
         promise: p
+        resolve: p.resolve
         fulfill: p.resolve
         reject: p.reject
 

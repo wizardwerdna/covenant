@@ -25,7 +25,9 @@
     fulfill: (value) => @state = @state.fulfill(value)
     reject: (reason) => @state = @state.reject(reason)
     resolve: (value) =>
-      if value instanceof Covenant
+      if value is this
+        @reject new TypeError
+      else if value instanceof Covenant
         value.then @fulfill, @reject
       else
         @_resolveNonCovenantValue value
@@ -49,7 +51,7 @@
     reject: (reason) -> new RejectedState reason, @pendeds
     schedule: (f)=> @pendeds.push f
 
-  class CompletedState
+  class SettledState
     constructor: (pendeds=[]) ->
       enqueue => pended(@) for pended in pendeds
     fulfill: -> @
@@ -64,11 +66,11 @@
         new RejectedState e
     schedule: (f)=> enqueue => f(@)
       
-  class FulfilledState extends CompletedState
+  class FulfilledState extends SettledState
     constructor: (@value, pended) -> super pended
     then: (onFulfill, onReject) -> super(onFulfill, @value)
 
-  class RejectedState extends CompletedState
+  class RejectedState extends SettledState
     constructor: (@reason, pended) -> super pended
     then: (onFulfill, onReject) -> super(onReject, @reason)
 
